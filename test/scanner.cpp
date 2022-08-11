@@ -91,3 +91,13 @@ TEST(scanner, mutli_line_string_error) {
     auto output = testing::internal::GetCapturedStderr();
     EXPECT_EQ(output, "ERROR: No support for multi-line strings. at [1, 6]\n");
 }
+
+TEST(scanner, comment) {
+    Scanner s;
+    auto tokens = s.scan("# this is a comment");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 19 }, }
+    );
+    fmt::print("\n{}\n{}\n", expected, tokens);
+    EXPECT_EQ(tokens, expected);
+}
