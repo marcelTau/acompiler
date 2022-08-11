@@ -37,6 +37,7 @@ add_executable(
     src/main.cpp
 )
 target_link_libraries(${PROJECT_NAME} fmt)
+target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Werror -pedantic)
 
 
 # Test configurations
