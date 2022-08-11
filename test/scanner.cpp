@@ -135,6 +135,17 @@ TEST(scanner, keyword) {
     EXPECT_EQ(tokens, expected);
 }
 
+TEST(scanner, keyword2) {
+    Scanner s;
+    auto tokens = s.scan("nuffin");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Nuffin }, .lexeme { "nuffin" }, .position { 1, 6 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 6 }, }
+    );
+    fmt::print("\n{}\n{}\n", expected, tokens);
+    EXPECT_EQ(tokens, expected);
+}
+
 TEST(scanner, whole_line_of_code) {
     Scanner s;
     auto tokens = s.scan("let x = 10;");

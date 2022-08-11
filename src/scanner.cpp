@@ -127,8 +127,8 @@ void Scanner::identifier() {
 
     switch (tokenType) {
         case TokenType::True: addToken(TokenType::True, "true"); break;
-        case TokenType::False: addToken(TokenType::True, "false"); break;
-        case TokenType::Nuffin: addToken(TokenType::True, "nuffin"); break;
+        case TokenType::False: addToken(TokenType::False, "false"); break;
+        case TokenType::Nuffin: addToken(TokenType::Nuffin, "nuffin"); break;
         default:
             addToken(tokenType);
             break;
