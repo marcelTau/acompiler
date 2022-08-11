@@ -65,6 +65,9 @@ void Scanner::nextToken() {
             break;
         }
         default: {
+            if (std::isdigit(c)) {
+                number();
+            }
             fmt::print(stderr, "Token not found: '{}'", c);
         };
     }
@@ -88,6 +91,22 @@ void Scanner::string() {
 
     const std::string_view literal = { m_source.begin() + m_start + 1, m_source.begin() + m_current - 1 };
     addToken(TokenType::String, literal);
+}
+
+void Scanner::number() {
+    while (std::isdigit(peek())) {
+        std::ignore = advance();
+    }
+
+    if (peek() == '.' && std::isdigit(peekNext())) {
+        std::ignore = advance();
+        while (std::isdigit(peek())) {
+            std::ignore = advance();
+        }
+    }
+
+    const std::string_view literal = { m_source.begin() + m_start, m_source.begin() + m_current };
+    addToken(TokenType::Number, literal);
 }
 
 

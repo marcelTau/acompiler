@@ -62,6 +62,13 @@ private:
         return m_source[m_current];
     }
 
+    [[nodiscard]] char peekNext() {
+        if (m_current + 1 >= m_source.size()) {
+            return '\0';
+        }
+        return m_source[m_current + 1];
+    }
+
     [[nodiscard]] bool expect(char expected) {
         if (isAtEnd()) {
             return false;
@@ -76,6 +83,7 @@ private:
     }
 
     void string();
+    void number();
 private:
     TokenList m_tokens {};
     std::string_view m_source;

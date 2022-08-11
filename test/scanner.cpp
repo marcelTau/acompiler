@@ -101,3 +101,25 @@ TEST(scanner, comment) {
     fmt::print("\n{}\n{}\n", expected, tokens);
     EXPECT_EQ(tokens, expected);
 }
+
+TEST(scanner, simple_number) {
+    Scanner s;
+    auto tokens = s.scan("10");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Number }, .lexeme { "10" }, .position { 1, 2 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 2 }, }
+    );
+    fmt::print("\n{}\n{}\n", expected, tokens);
+    EXPECT_EQ(tokens, expected);
+}
+
+TEST(scanner, float_number) {
+    Scanner s;
+    auto tokens = s.scan("10.2");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Number }, .lexeme { "10.2" }, .position { 1, 4 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 4 }, }
+    );
+    fmt::print("\n{}\n{}\n", expected, tokens);
+    EXPECT_EQ(tokens, expected);
+}
