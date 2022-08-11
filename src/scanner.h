@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 #include "token.h"
 
 struct ScannerError : public std::exception {
@@ -84,6 +85,11 @@ private:
 
     void string();
     void number();
+    void identifier();
+
+    std::string_view getCurrentLiteral() {
+        return { m_source.begin() + m_start, m_source.begin() + m_current };
+    }
 private:
     TokenList m_tokens {};
     std::string_view m_source;
@@ -91,4 +97,22 @@ private:
     std::size_t m_start { 0 };
 
     TokenPosition m_position { 1, 0 };
+    const std::unordered_map<std::string_view, TokenType> m_keywords = {
+        { "and", TokenType::And },
+        { "else", TokenType::Else },
+        { "false", TokenType::False },
+        { "for", TokenType::For },
+        { "fun", TokenType::Fun },
+        { "if", TokenType::If },
+        { "nuffin", TokenType::Nuffin },
+        { "or", TokenType::Or },
+        { "print", TokenType::Print },
+        { "return", TokenType::Return },
+        { "true", TokenType::True },
+        { "let", TokenType::Let },
+        { "while", TokenType::While },
+        { "then", TokenType::Then },
+        { "do", TokenType::Do },
+        { "end", TokenType::End },
+    };
 };

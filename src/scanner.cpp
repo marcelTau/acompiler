@@ -67,8 +67,11 @@ void Scanner::nextToken() {
         default: {
             if (std::isdigit(c)) {
                 number();
+            } else if (std::isalpha(c) || c == '_') {
+                identifier();
+            } else {
+                fmt::print(stderr, "Token not found: '{}'", c);
             }
-            fmt::print(stderr, "Token not found: '{}'", c);
         };
     }
     #undef SINGLE_TOKEN
@@ -105,27 +108,30 @@ void Scanner::number() {
         }
     }
 
-    const std::string_view literal = { m_source.begin() + m_start, m_source.begin() + m_current };
+    const std::string_view literal = getCurrentLiteral();
     addToken(TokenType::Number, literal);
 }
 
+void Scanner::identifier() {
+    while (std::isalnum(peek()) || peek() == '_') {
+        std::ignore = advance();
+    }
 
+    const std::string_view text = getCurrentLiteral();
+    TokenType tokenType;
+    try {
+        tokenType = m_keywords.at(text);
+    } catch (const std::exception& e) {
+        tokenType = TokenType::Identifier;
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    switch (tokenType) {
+        case TokenType::True: addToken(TokenType::True, "true"); break;
+        case TokenType::False: addToken(TokenType::True, "false"); break;
+        case TokenType::Nuffin: addToken(TokenType::True, "nuffin"); break;
+        default:
+            addToken(tokenType);
+            break;
+    }
+}
 

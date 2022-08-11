@@ -123,3 +123,29 @@ TEST(scanner, float_number) {
     fmt::print("\n{}\n{}\n", expected, tokens);
     EXPECT_EQ(tokens, expected);
 }
+
+TEST(scanner, keyword) {
+    Scanner s;
+    auto tokens = s.scan("then");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Then }, .lexeme { "then" }, .position { 1, 4 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 4 }, }
+    );
+    fmt::print("\n{}\n{}\n", expected, tokens);
+    EXPECT_EQ(tokens, expected);
+}
+
+TEST(scanner, whole_line_of_code) {
+    Scanner s;
+    auto tokens = s.scan("let x = 10;");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Let }, .lexeme { "let" }, .position { 1, 3 }, },
+        Token { .type { TokenType::Identifier }, .lexeme { "x" }, .position { 1, 5 }, },
+        Token { .type { TokenType::Equal }, .lexeme { "=" }, .position { 1, 7 }, },
+        Token { .type { TokenType::Number }, .lexeme { "10" }, .position { 1, 10 }, },
+        Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 1, 11 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 11 }, }
+    );
+    fmt::print("\n{}\n{}\n", expected, tokens);
+    EXPECT_EQ(tokens, expected);
+}
