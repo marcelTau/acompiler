@@ -108,12 +108,20 @@ auto fmt::formatter<TokenType>::format(const TokenType& type, FormatContext& ctx
 struct TokenPosition {
     int line;
     int column;
+
+    bool operator==(const TokenPosition& other) const {
+        return line == other.line && column == other.column;
+    }
 };
 
 struct Token {
     TokenType type;
     std::string_view lexeme;
     TokenPosition position;
+
+    bool operator==(const Token& other) const {
+        return type == other.type && lexeme == other.lexeme && position == other.position;
+    }
 };
 
 template<>

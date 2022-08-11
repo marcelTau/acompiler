@@ -11,4 +11,3 @@ TEST(token, correct_print_of_token_type) {
     std::string expected = "Token (For, 'for', [0,0])";
     EXPECT_EQ(fmt::format("{}", token), expected);
 }
-
