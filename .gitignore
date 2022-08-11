@@ -1,0 +1,13 @@
+.cache/
+.idea/
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+Makefile
+_deps/
+build/
+cmake-build-debug/
+cmake_install.cmake
+compile_commands.json
+*.cmake
+
