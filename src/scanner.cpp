@@ -135,3 +135,82 @@ void Scanner::identifier() {
     }
 }
 
+
+// ============================================================================
+// Helper functions
+// ============================================================================
+
+
+char Scanner::advance() {
+    m_position.column++;
+    return m_source[m_current++];
+}
+
+void Scanner::addToken(const TokenType& type, const std::string_view literal = "") {
+    fmt::print("{}: m_start = {}, m_current = {}\n", type, m_start, m_current);
+
+    const std::string_view lexeme = literal != "" 
+        ? literal
+        : std::string_view { m_source.begin() + m_start, m_source.begin() + m_current };
+
+    if (type == TokenType::Eof) {
+        m_tokens.push_back(Token { .type { type }, .lexeme { "" }, .position { m_position } });
+    } else {
+        m_tokens.push_back(Token { 
+                               .type { type },
+                               .lexeme { lexeme },
+                               .position { m_position } });
+    }
+}
+
+void Scanner::newLine() {
+    m_position.line++;
+    m_position.column = 1;
+}
+
+bool Scanner::isAtEnd() {
+    return m_current >= m_source.size();
+}
+
+char Scanner::peek() {
+    if (isAtEnd()) {
+        fmt::print(stderr, "peek failed");
+        return '\0';
+    }
+    return m_source[m_current];
+}
+
+char Scanner::peekNext() {
+    if (m_current + 1 >= m_source.size()) {
+        return '\0';
+    }
+    return m_source[m_current + 1];
+}
+
+bool Scanner::expect(char expected) {
+    if (isAtEnd()) {
+        return false;
+    }
+
+    if (m_source[m_current] != expected) {
+        return false;
+    }
+
+    m_current++;
+    return true;
+}
+
+std::string_view Scanner::getCurrentLiteral() {
+    return { m_source.begin() + m_start, m_source.begin() + m_current };
+}
+
+
+
+
+
+
+
+
+
+
+
