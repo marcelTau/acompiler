@@ -146,7 +146,7 @@ char Scanner::advance() {
     return m_source[m_current++];
 }
 
-void Scanner::addToken(const TokenType& type, const std::string_view literal = "") {
+void Scanner::addToken(const TokenType& type, const std::string_view literal) {
     fmt::print("{}: m_start = {}, m_current = {}\n", type, m_start, m_current);
 
     const std::string_view lexeme = literal != "" 
