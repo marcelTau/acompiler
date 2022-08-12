@@ -121,7 +121,7 @@ struct TokenPosition {
 
 struct Token {
     TokenType type;
-    std::string_view lexeme;
+    std::string_view lexeme { "" };
     TokenPosition position;
 
     bool operator==(const Token& other) const {

@@ -70,7 +70,7 @@ void Scanner::nextToken() {
             } else if (std::isalpha(c) || c == '_') {
                 identifier();
             } else {
-                fmt::print(stderr, "Token not found: '{}'", c);
+                throw ScannerError(fmt::format("Token not found: '{}'.", c), m_position);
             }
         };
     }

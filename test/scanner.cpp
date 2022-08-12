@@ -160,3 +160,73 @@ TEST(scanner, whole_line_of_code) {
     fmt::print("\n{}\n{}\n", expected, tokens);
     EXPECT_EQ(tokens, expected);
 }
+
+TEST(scanner, if_statement) {
+    Scanner s;
+    auto tokens = s.scan("if (x >= 10) then");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::If }, .lexeme { "if" }, .position { 1, 2 }, },
+        Token { .type { TokenType::LeftParen }, .lexeme { "(" }, .position { 1, 4 }, },
+        Token { .type { TokenType::Identifier }, .lexeme { "x" }, .position { 1, 5 }, },
+        Token { .type { TokenType::GreaterEqual }, .lexeme { ">=" }, .position { 1, 7 }, },
+        Token { .type { TokenType::Number }, .lexeme { "10" }, .position { 1, 10 }, },
+        Token { .type { TokenType::RightParen }, .lexeme { ")" }, .position { 1, 11 }, },
+        Token { .type { TokenType::Then }, .lexeme { "then" }, .position { 1, 16 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 16 }, }
+    );
+    fmt::print("\n{}\n{}\n", expected, tokens);
+    EXPECT_EQ(tokens, expected);
+}
+
+TEST(scanner, assignment_to_nuffin) {
+    Scanner s;
+    auto tokens = s.scan("let x = nuffin;");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Let }, .lexeme { "let" }, .position { 1, 3 }, },
+        Token { .type { TokenType::Identifier }, .lexeme { "x" }, .position { 1, 5 }, },
+        Token { .type { TokenType::Equal }, .lexeme { "=" }, .position { 1, 7 }, },
+        Token { .type { TokenType::Nuffin }, .lexeme { "nuffin" }, .position { 1, 14 }, },
+        Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 1, 15 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 15 }, }
+    );
+    fmt::print("\n{}\n{}\n", expected, tokens);
+    EXPECT_EQ(tokens, expected);
+}
+
+TEST(scanner, check_booleans_true) {
+    Scanner s;
+    auto tokens = s.scan("let x = true;");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Let }, .lexeme { "let" }, .position { 1, 3 }, },
+        Token { .type { TokenType::Identifier }, .lexeme { "x" }, .position { 1, 5 }, },
+        Token { .type { TokenType::Equal }, .lexeme { "=" }, .position { 1, 7 }, },
+        Token { .type { TokenType::True }, .lexeme { "true" }, .position { 1, 12 }, },
+        Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 1, 13 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 13 }, }
+    );
+    fmt::print("\n{}\n{}\n", expected, tokens);
+    EXPECT_EQ(tokens, expected);
+}
+
+TEST(scanner, check_booleans_false) {
+    Scanner s;
+    auto tokens = s.scan("let x = false;");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Let }, .lexeme { "let" }, .position { 1, 3 }, },
+        Token { .type { TokenType::Identifier }, .lexeme { "x" }, .position { 1, 5 }, },
+        Token { .type { TokenType::Equal }, .lexeme { "=" }, .position { 1, 7 }, },
+        Token { .type { TokenType::False }, .lexeme { "false" }, .position { 1, 13 }, },
+        Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 1, 14 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 14 }, }
+    );
+    fmt::print("\n{}\n{}\n", expected, tokens);
+    EXPECT_EQ(tokens, expected);
+}
+
+TEST(scanner, token_not_found_error) {
+    Scanner s;
+    testing::internal::CaptureStderr();
+    auto tokens = s.scan("~");
+    auto output = testing::internal::GetCapturedStderr();
+    EXPECT_EQ(output, "ERROR: Token not found: '~'. at [1, 1]\n");
+}
