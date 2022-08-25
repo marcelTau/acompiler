@@ -230,3 +230,40 @@ TEST(scanner, token_not_found_error) {
     auto output = testing::internal::GetCapturedStderr();
     EXPECT_EQ(output, "ERROR: Token not found: '~'. at [1, 1]\n");
 }
+
+TEST(scanner, multi_line_function) {
+    Scanner s;
+    auto tokens = s.scan(R"(let x = 20;
+print x;
+)");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Let }, .lexeme { "let" }, .position { 1, 3 }, },
+        Token { .type { TokenType::Identifier }, .lexeme { "x" }, .position { 1, 5 }, },
+        Token { .type { TokenType::Equal }, .lexeme { "=" }, .position { 1, 7 }, },
+        Token { .type { TokenType::Number }, .lexeme { "20" }, .position { 1, 10 }, },
+        Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 1, 11 }, },
+        Token { .type { TokenType::Print }, .lexeme { "print" }, .position { 2, 6 }, },
+        Token { .type { TokenType::Identifier }, .lexeme { "x" }, .position { 2, 8 }, },
+        Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 2, 9 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 3, 1 }, }
+    );
+    fmt::print("\n{}\n{}\n", expected, tokens);
+    EXPECT_EQ(tokens, expected);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

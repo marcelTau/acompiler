@@ -19,6 +19,7 @@ Scanner::TokenList Scanner::scan(const std::string_view source) {
     return m_tokens;
 }
 
+
 void Scanner::nextToken() {
     #define SINGLE_TOKEN(token_char, token_name) \
         case token_char: addToken(TokenType::token_name); break;
