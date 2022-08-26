@@ -4,16 +4,34 @@
 #include <vector>
 #include <memory>
 #include <optional>
+#include <charconv>
+#include <cassert>
 #include "token.h"
-#include "assert.h"
+
+/// @todo ugly hacky stuff, try to fix this pls
+namespace Expressions {
+    struct ExpressionVisitor;
+    struct Expression {
+        virtual ~Expression() = default;
+        virtual void accept(ExpressionVisitor& visitor) = 0;
+        
+        virtual std::string to_string() = 0;
+        // @todo datatype
+    };
+} // namespace Expression
+
 
 namespace Statements {
+    using Expressions::Expression;
+
     struct VariableDefinition;
     struct ExpressionStatement;
+    struct Assignment;
 
     struct StatementVisitor {
         virtual void visit(VariableDefinition& statement) = 0;
         virtual void visit(ExpressionStatement& statement) = 0;
+        virtual void visit(Assignment& statement) = 0;
 
         virtual ~StatementVisitor() = default;
     };
@@ -32,15 +50,26 @@ namespace Statements {
     };
 
     struct VariableDefinition : public StatementAcceptor<VariableDefinition> {
-        VariableDefinition(std::string_view name) : name(name) {}
+        VariableDefinition(std::string_view name, std::unique_ptr<Expression> initializer)
+            : name(name)
+            , initializer(std::move(initializer))
+        {
+        }
+
         std::string name;
+        std::unique_ptr<Expression> initializer;
 
         std::string to_string() final {
-            return fmt::format("VariableDefinition: .name = {}, ", name);
+            return fmt::format("VariableDefinition: .name = {}, .initializer {}", name, initializer ? initializer->to_string() : "nullptr");
         }
     };
+
     struct ExpressionStatement : public StatementAcceptor<ExpressionStatement> {
+        std::string to_string() final {
+            return "";
+        }
     };
+
 } // namespace Statements
 
 
@@ -55,13 +84,6 @@ namespace Expressions {
         virtual void visit(Number& expression) = 0;
     };
 
-    struct Expression {
-        virtual ~Expression() = default;
-        virtual void accept(ExpressionVisitor& visitor) = 0;
-        
-        // @todo datatype
-    };
-
     template<typename T>
     struct ExpressionAcceptor : public Expression {
         void accept(ExpressionVisitor& visitor) final {
@@ -74,6 +96,19 @@ namespace Expressions {
     struct BinaryOperator : public ExpressionAcceptor<BinaryOperator> {
     };
     struct Number : public ExpressionAcceptor<Number> {
+        Number(std::string_view sv)
+        {
+            auto result = std::from_chars(sv.data(), sv.data() + sv.size(), value);
+            if (result.ec == std::errc::invalid_argument) {
+                assert(false && "TODO NUMBER");
+            }
+        }
+
+        int value;
+
+        std::string to_string() final {
+            return fmt::format("NumberExpression: {}", value);
+        }
     };
 
 } // namespace Expressions
@@ -83,7 +118,11 @@ public:
     using TokenList = std::vector<Token>;
     using StatementList = std::vector<std::unique_ptr<Statements::Statement>>;
 
-    using Statement = std::unique_ptr<Statements::Statement>;
+    using Statement = Statements::Statement;
+    using UniqStatement = std::unique_ptr<Statement>;
+
+    using Expression = Expressions::Expression;
+    using UniqExpression = std::unique_ptr<Expression>;
 
 public:
     Parser() = default;
@@ -111,20 +150,49 @@ public:
     [[nodiscard]] auto isAtEnd() -> bool { return peek().type == TokenType::Eof; }
     [[nodiscard]] auto peek() -> Token { return m_tokens[m_current]; }
 
-    [[nodiscard]] auto declaration() -> Statement {
-        if (check(TokenType::Let)) {
-            advance();
+    [[nodiscard]] auto declaration() -> UniqStatement {
+        if (checkAndAdvance(TokenType::Let)) {
             return varDeclaration();
         }
         throw "declaration";
     }
 
-    [[nodiscard]] auto varDeclaration() -> Statement {
+    [[nodiscard]] auto varDeclaration() -> UniqStatement {
         const auto name = consume(TokenType::Identifier, "Expect variable name.");
-        if (name.has_value()) {
-            return std::make_unique<Statements::VariableDefinition>(name->lexeme);
+
+        if (!name.has_value()) {
+            throw;
         }
-        throw;
+
+        UniqExpression initializer;
+
+        if (checkAndAdvance(TokenType::Equal)) {
+            initializer = expression();
+        }
+
+        std::ignore = consume(TokenType::Semicolon, "Expect ';' after variable declaration.");
+        return std::make_unique<Statements::VariableDefinition>(name->lexeme, std::move(initializer));
+    }
+
+    [[nodiscard]] auto expression() -> UniqExpression {
+        return assignment();
+    }
+
+    [[nodiscard]] auto assignment() -> UniqExpression {
+        auto expr = primary(); // @todo change this
+
+        if (checkAndAdvance(TokenType::Equal)) {
+            fmt::print("todo multi assignment");
+        }
+        return expr;
+    }
+
+    [[nodiscard]] auto primary() -> UniqExpression {
+        if (checkAndAdvance(TokenType::Number)) {
+            return std::make_unique<Expressions::Number>(previous().lexeme);
+        }
+
+        return nullptr;
     }
 
     [[nodiscard]] auto consume(const TokenType& ttype, std::string_view msg) -> std::optional<Token> {
@@ -134,6 +202,14 @@ public:
             fmt::print(stderr, "Error: {}", msg);
             return std::nullopt;
         }
+    }
+
+    [[nodiscard]] auto checkAndAdvance(const TokenType& ttype) -> bool const {
+        const auto result = check(ttype);
+        if (result) {
+            advance();
+        }
+        return result;
     }
 
     [[nodiscard]] auto check(const TokenType& ttype) -> bool const {

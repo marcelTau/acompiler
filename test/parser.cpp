@@ -34,7 +34,6 @@ auto fmt::formatter<Parser::StatementList>::format(const Parser::StatementList& 
 
     for (int i = 0; i < a.size(); ++i) {
         if (a[i]->to_string() != b[i]->to_string()) {
-            Statements::VariableDefinition s = *static_cast<Statements::VariableDefinition *>(a[i].get());
             fmt::print(stderr, "{} and {} are not equal", a[i].get()->to_string(), b[i].get()->to_string());
             return false;
         }
@@ -50,10 +49,44 @@ TEST(parser, var_with_name) {
     auto stmts = p.parse(tokens);
 
     Parser::StatementList expected;
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a"));
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", nullptr));
     EXPECT_TRUE(is_same(stmts, expected));
 
     if (HasFailure()) {
         fmt::print(stderr, "#{} {}#", stmts, expected);
     }
 }
+
+TEST(parser, variable_assignment) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a = 10;");
+    auto stmts = p.parse(tokens);
+
+    Parser::StatementList expected;
+    auto number = std::make_unique<Expressions::Number>("10");
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number)));
+    EXPECT_TRUE(is_same(stmts, expected));
+
+    if (HasFailure()) {
+        fmt::print(stderr, "#{} {}#", stmts, expected);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
