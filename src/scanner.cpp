@@ -148,7 +148,7 @@ char Scanner::advance() {
 }
 
 void Scanner::addToken(const TokenType& type, const std::string_view literal) {
-    fmt::print("{}: m_start = {}, m_current = {}\n", type, m_start, m_current);
+    //fmt::print("{}: m_start = {}, m_current = {}\n", type, m_start, m_current);
 
     const std::string_view lexeme = literal != "" 
         ? literal
@@ -175,7 +175,7 @@ bool Scanner::isAtEnd() {
 
 char Scanner::peek() {
     if (isAtEnd()) {
-        fmt::print(stderr, "peek failed");
+        //fmt::print(stderr, "peek failed");
         return '\0';
     }
     return m_source[m_current];

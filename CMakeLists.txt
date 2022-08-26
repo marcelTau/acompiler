@@ -9,6 +9,7 @@ set(TEST_NAME ${PROJECT_NAME}_tests)
 set(SOURCES
     src/scanner.cpp
     src/scanner.h
+    src/parser.h
     src/token.cpp
     src/token.h
 )
@@ -48,6 +49,7 @@ add_executable(
     ${TEST_NAME}
     test/scanner.cpp
     test/token.cpp
+    test/parser.cpp
     ${SOURCES}
 )
 

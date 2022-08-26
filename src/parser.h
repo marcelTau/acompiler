@@ -1,8 +1,11 @@
 #pragma once
 
+#include <utility>
 #include <vector>
 #include <memory>
+#include <optional>
 #include "token.h"
+#include "assert.h"
 
 namespace Statements {
     struct VariableDefinition;
@@ -18,6 +21,7 @@ namespace Statements {
     struct Statement {
         virtual ~Statement() = default;
         virtual void accept(StatementVisitor& visitor) = 0;
+        virtual std::string to_string() = 0;
     };
 
     template<typename T>
@@ -28,6 +32,12 @@ namespace Statements {
     };
 
     struct VariableDefinition : public StatementAcceptor<VariableDefinition> {
+        VariableDefinition(std::string_view name) : name(name) {}
+        std::string name;
+
+        std::string to_string() final {
+            return fmt::format("VariableDefinition: .name = {}, ", name);
+        }
     };
     struct ExpressionStatement : public StatementAcceptor<ExpressionStatement> {
     };
@@ -73,10 +83,76 @@ public:
     using TokenList = std::vector<Token>;
     using StatementList = std::vector<std::unique_ptr<Statements::Statement>>;
 
+    using Statement = std::unique_ptr<Statements::Statement>;
+
 public:
     Parser() = default;
 
-    void parse(const TokenList& tokens);
+    StatementList parse(const TokenList& tokens) {
+        StatementList statements;
+
+        m_tokens = tokens;
+
+        while (not isAtEnd()) {
+            try {
+                statements.push_back(declaration());
+            } catch (std::exception& e) {
+                fmt::print(stderr, "ERROR: (TODO): {}", e.what());
+                return statements;
+            } catch (...) {
+                fmt::print(stderr, "ERROR: (TODO): ...");
+                return statements;
+            }
+        }
+
+        return statements;
+    }
+
+    [[nodiscard]] auto isAtEnd() -> bool { return peek().type == TokenType::Eof; }
+    [[nodiscard]] auto peek() -> Token { return m_tokens[m_current]; }
+
+    [[nodiscard]] auto declaration() -> Statement {
+        if (check(TokenType::Let)) {
+            advance();
+            return varDeclaration();
+        }
+        throw "declaration";
+    }
+
+    [[nodiscard]] auto varDeclaration() -> Statement {
+        const auto name = consume(TokenType::Identifier, "Expect variable name.");
+        if (name.has_value()) {
+            return std::make_unique<Statements::VariableDefinition>(name->lexeme);
+        }
+        throw;
+    }
+
+    [[nodiscard]] auto consume(const TokenType& ttype, std::string_view msg) -> std::optional<Token> {
+        if (check(ttype)) {
+            return advance();
+        } else {
+            fmt::print(stderr, "Error: {}", msg);
+            return std::nullopt;
+        }
+    }
+
+    [[nodiscard]] auto check(const TokenType& ttype) -> bool const {
+        if (isAtEnd()) {
+            return false;
+        }
+        return peek().type == ttype;
+    }
+
+    auto advance() -> Token {
+        if (not isAtEnd()) {
+            m_current++;
+        }
+        return previous();
+    }
+
+    [[nodiscard]] auto previous() -> Token {
+        return m_tokens[m_current - 1];
+    }
 
 private:
     TokenList m_tokens;
