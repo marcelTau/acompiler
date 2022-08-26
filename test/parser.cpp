@@ -73,10 +73,24 @@ TEST(parser, variable_assignment) {
     }
 }
 
+/*
+TEST(parser, variable_assignment_with_plus_expression) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a = 10 + 20;");
+    auto stmts = p.parse(tokens);
 
+    Parser::StatementList expected;
+    //auto number = std::make_unique<Expressions::Number>("10");
+    //expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number)));
+    EXPECT_TRUE(is_same(stmts, expected));
+    EXPECT_TRUE(false);
 
-
-
+    if (HasFailure()) {
+        fmt::print(stderr, "#{} {}#", stmts, expected);
+    }
+}
+*/
 
 
 

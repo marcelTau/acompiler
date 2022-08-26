@@ -147,9 +147,48 @@ public:
         return statements;
     }
 
+    /// --- Helper functions --- ///
     [[nodiscard]] auto isAtEnd() -> bool { return peek().type == TokenType::Eof; }
+
     [[nodiscard]] auto peek() -> Token { return m_tokens[m_current]; }
 
+    [[nodiscard]] auto consume(const TokenType& ttype, std::string_view msg) -> std::optional<Token> {
+        if (check(ttype)) {
+            return advance();
+        } else {
+            fmt::print(stderr, "Error: {}", msg);
+            return std::nullopt;
+        }
+    }
+
+    [[nodiscard]] auto checkAndAdvance(const TokenType& ttype) -> bool const {
+        const auto result = check(ttype);
+        if (result) {
+            advance();
+        }
+        return result;
+    }
+
+    [[nodiscard]] auto check(const TokenType& ttype) -> bool const {
+        if (isAtEnd()) {
+            return false;
+        }
+        return peek().type == ttype;
+    }
+
+    auto advance() -> Token {
+        if (not isAtEnd()) {
+            m_current++;
+        }
+        return previous();
+    }
+
+    [[nodiscard]] auto previous() -> Token {
+        return m_tokens[m_current - 1];
+    }
+
+
+    /// --- Parsing functions --- ///
     [[nodiscard]] auto declaration() -> UniqStatement {
         if (checkAndAdvance(TokenType::Let)) {
             return varDeclaration();
@@ -195,40 +234,6 @@ public:
         return nullptr;
     }
 
-    [[nodiscard]] auto consume(const TokenType& ttype, std::string_view msg) -> std::optional<Token> {
-        if (check(ttype)) {
-            return advance();
-        } else {
-            fmt::print(stderr, "Error: {}", msg);
-            return std::nullopt;
-        }
-    }
-
-    [[nodiscard]] auto checkAndAdvance(const TokenType& ttype) -> bool const {
-        const auto result = check(ttype);
-        if (result) {
-            advance();
-        }
-        return result;
-    }
-
-    [[nodiscard]] auto check(const TokenType& ttype) -> bool const {
-        if (isAtEnd()) {
-            return false;
-        }
-        return peek().type == ttype;
-    }
-
-    auto advance() -> Token {
-        if (not isAtEnd()) {
-            m_current++;
-        }
-        return previous();
-    }
-
-    [[nodiscard]] auto previous() -> Token {
-        return m_tokens[m_current - 1];
-    }
 
 private:
     TokenList m_tokens;
