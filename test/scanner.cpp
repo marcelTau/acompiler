@@ -4,7 +4,7 @@
 
 template <typename ...Args>
 Scanner::TokenList buildExpectedList(Args&& ...args) {
-    fmt::print("{}", __PRETTY_FUNCTION__);
+    //fmt::print("{}", __PRETTY_FUNCTION__);
     Scanner::TokenList tokens { args... };
     return tokens;
 }
@@ -72,7 +72,9 @@ TEST(scanner, simple_string) {
         Token { .type { TokenType::String }, .lexeme { "hallo" }, .position { 1, 7 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 7 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 
@@ -98,7 +100,9 @@ TEST(scanner, comment) {
     Scanner::TokenList expected = buildExpectedList(
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 19 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 
@@ -109,7 +113,9 @@ TEST(scanner, simple_number) {
         Token { .type { TokenType::Number }, .lexeme { "10" }, .position { 1, 2 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 2 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 
@@ -120,7 +126,9 @@ TEST(scanner, float_number) {
         Token { .type { TokenType::Number }, .lexeme { "10.2" }, .position { 1, 4 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 4 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 
@@ -131,7 +139,9 @@ TEST(scanner, keyword) {
         Token { .type { TokenType::Then }, .lexeme { "then" }, .position { 1, 4 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 4 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 
@@ -142,7 +152,9 @@ TEST(scanner, keyword2) {
         Token { .type { TokenType::Nuffin }, .lexeme { "nuffin" }, .position { 1, 6 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 6 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 
@@ -157,7 +169,9 @@ TEST(scanner, whole_line_of_code) {
         Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 1, 11 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 11 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 
@@ -174,7 +188,9 @@ TEST(scanner, if_statement) {
         Token { .type { TokenType::Then }, .lexeme { "then" }, .position { 1, 16 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 16 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 
@@ -189,7 +205,9 @@ TEST(scanner, assignment_to_nuffin) {
         Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 1, 15 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 15 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 
@@ -204,7 +222,9 @@ TEST(scanner, check_booleans_true) {
         Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 1, 13 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 13 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 
@@ -219,7 +239,9 @@ TEST(scanner, check_booleans_false) {
         Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 1, 14 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 14 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 
@@ -247,7 +269,9 @@ print x;
         Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 2, 9 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 3, 1 }, }
     );
-    fmt::print("\n{}\n{}\n", expected, tokens);
+    if (HasFailure()) {
+        fmt::print("\n{}\n{}\n", expected, tokens);
+    }
     EXPECT_EQ(tokens, expected);
 }
 

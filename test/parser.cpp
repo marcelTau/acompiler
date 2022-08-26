@@ -51,7 +51,9 @@ TEST(parser, var_with_name) {
 
     Parser::StatementList expected;
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a"));
-
-    fmt::print("#{} {}#", stmts, expected);
     EXPECT_TRUE(is_same(stmts, expected));
+
+    if (HasFailure()) {
+        fmt::print(stderr, "#{} {}#", stmts, expected);
+    }
 }

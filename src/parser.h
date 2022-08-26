@@ -97,10 +97,10 @@ public:
             try {
                 statements.push_back(declaration());
             } catch (std::exception& e) {
-                fmt::print(stderr, "ERROR: (TODO): {}", e.what());
+                fmt::print(stderr, "ERROR: (TODO): {}\n", e.what());
                 return statements;
             } catch (...) {
-                fmt::print(stderr, "ERROR: (TODO): ...");
+                fmt::print(stderr, "ERROR: (TODO): ...\n");
                 return statements;
             }
         }
