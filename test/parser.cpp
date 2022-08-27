@@ -232,3 +232,34 @@ TEST(parser, variable_assignment_with_recurring_mixed_star_slash_expressions) {
         fmt::print(stderr, "#{} {}#", stmts, expected);
     }
 }
+
+TEST(parser, variable_assignment_with_recurring_precedence_expressions) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a = 10 + 20 * 30;");
+    auto stmts = p.parse(tokens);
+
+    Parser::StatementList expected;
+
+    auto lhs = std::make_unique<Expressions::Number>("10");
+    Token token = Token({ .type = TokenType::Plus, .lexeme = "+", .position = { .line = 1, .column = 12 } });
+    auto rhs = std::make_unique<Expressions::Number>("20");
+    Token token2 = Token({ .type = TokenType::Star, .lexeme = "*", .position = { .line = 1, .column = 17 } });
+    auto rrhs = std::make_unique<Expressions::Number>("30");
+
+    // Structure:
+    //    +
+    // 10   *
+    //    20 30
+
+    auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(rhs), token2, std::move(rrhs));
+    auto initializer2 = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(initializer));
+
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer2)));
+
+    EXPECT_TRUE(is_same(stmts, expected));
+
+    if (HasFailure()) {
+        fmt::print(stderr, "#{} {}#", stmts, expected);
+    }
+}
