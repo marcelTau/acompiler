@@ -303,3 +303,54 @@ TEST(parser, variable_assignment_with_variable_identifier) {
     expected.push_back(std::make_unique<Statements::VariableDefinition>("b", std::move(var)));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
+
+TEST(parser, print_test_single_value) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("print 10;");
+    auto stmts = p.parse(tokens);
+
+    Parser::StatementList expected;
+    auto number = std::make_unique<Expressions::Number>("10");
+    expected.push_back(std::make_unique<Statements::Print>(std::move(number)));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, print_test_complex) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("print 10 + 2 * 3;");
+    auto stmts = p.parse(tokens);
+
+    //  print
+    //       +
+    //     10  *
+    //        2 3
+
+    Parser::StatementList expected;
+    auto number10 = std::make_unique<Expressions::Number>("10");
+    auto number2 = std::make_unique<Expressions::Number>("2");
+    auto number3 = std::make_unique<Expressions::Number>("3");
+
+    auto tokenPlus = Token({ .type = TokenType::Plus, .lexeme = "+", .position = { .line = 1, .column = 10 } });
+    auto tokenStar = Token({ .type = TokenType::Star, .lexeme = "*", .position = { .line = 1, .column = 14 } });
+
+    auto binaryStar = std::make_unique<Expressions::BinaryOperator>(std::move(number2), tokenStar, std::move(number3));
+    auto binaryPlus = std::make_unique<Expressions::BinaryOperator>(std::move(number10), tokenPlus, std::move(binaryStar));
+
+    expected.push_back(std::make_unique<Statements::Print>(std::move(binaryPlus)));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

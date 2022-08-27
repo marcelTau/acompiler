@@ -27,11 +27,13 @@ namespace Statements {
 
     struct VariableDefinition;
     struct ExpressionStatement;
+    struct Print;
     //struct Assignment;
 
     struct StatementVisitor {
         virtual void visit(VariableDefinition& statement) = 0;
         virtual void visit(ExpressionStatement& statement) = 0;
+        virtual void visit(Print& statement) = 0;
         //virtual void visit(Assignment& statement) = 0;
 
         virtual ~StatementVisitor() = default;
@@ -69,6 +71,20 @@ namespace Statements {
         std::string to_string() final {
             return "ExpressionStatement";
         }
+    };
+
+    struct Print : public StatementAcceptor<Print> {
+
+        Print(std::unique_ptr<Expression> expr)
+            : expression(std::move(expr))
+        {
+        }
+
+        std::string to_string() final {
+            return fmt::format("PrintStatement: .expression {{ {} }}", expression->to_string());
+        }
+
+        std::unique_ptr<Expression> expression;
     };
 
 } // namespace Statements
@@ -207,6 +223,9 @@ public:
     /// --- Parsing functions --- ///
     [[nodiscard]] auto declaration() -> Result<UniqStatement>;
     [[nodiscard]] auto varDeclaration() -> Result<UniqStatement>;
+    [[nodiscard]] auto statement() -> Result<UniqStatement>;
+    [[nodiscard]] auto printStatement() -> Result<UniqStatement>;
+
     [[nodiscard]] auto expression() -> Result<UniqExpression>;
     [[nodiscard]] auto assignment() -> Result<UniqExpression>;
 

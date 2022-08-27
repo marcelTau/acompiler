@@ -76,8 +76,28 @@ auto Parser::errorExpr(const Token& token, std::string_view msg) -> Result<UniqE
 auto Parser::declaration() -> Result<UniqStatement> {
     if (checkAndAdvance(TokenType::Let)) {
         return varDeclaration();
+    } else {
+        return statement();
     }
     assert(false);
+}
+
+auto Parser::statement() -> Result<UniqStatement> {
+    if (checkAndAdvance(TokenType::Print)) {
+        return printStatement();
+    }
+    assert(false && "expression_statement()");
+}
+
+auto Parser::printStatement() -> Result<UniqStatement> {
+    auto expr = expression();
+    if (!expr) {
+        return expr.get_err();
+    }
+    std::ignore = consume(TokenType::Semicolon, "Expect ';' after value.");
+
+    auto printExpr = std::make_unique<Statements::Print>(expr.unwrap());
+    return Result<UniqStatement>(std::move(printExpr));
 }
 
 auto Parser::varDeclaration() -> Result<UniqStatement> {
