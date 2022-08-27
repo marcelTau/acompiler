@@ -238,3 +238,54 @@ TEST(parser, variable_assignment_with_unary_minus) {
 
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
+
+TEST(parser, variable_assignment_with_unary_negation_false) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a = !false;");
+    auto stmts = p.parse(tokens);
+
+    Parser::StatementList expected;
+    auto bool_expr = std::make_unique<Expressions::Bool>("false");
+    auto token = Token({ .type = TokenType::Bang, .lexeme = "!", .position { .line = 1, .column = 9 } });
+    auto unary = std::make_unique<Expressions::Unary>(token, std::move(bool_expr));
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(unary)));
+
+    fmt::print(stderr, "#{} {}#", stmts, expected);
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, variable_assignment_with_unary_negation_true) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a = !true;");
+    auto stmts = p.parse(tokens);
+
+    Parser::StatementList expected;
+    auto bool_expr = std::make_unique<Expressions::Bool>("true");
+    auto token = Token({ .type = TokenType::Bang, .lexeme = "!", .position { .line = 1, .column = 9 } });
+    auto unary = std::make_unique<Expressions::Unary>(token, std::move(bool_expr));
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(unary)));
+
+    fmt::print(stderr, "#{} {}#", stmts, expected);
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, variable_assignment_with_double_unary_negation_true) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a = !!true;");
+    auto stmts = p.parse(tokens);
+
+    Parser::StatementList expected;
+
+    auto bool_expr = std::make_unique<Expressions::Bool>("true");
+    auto token = Token({ .type = TokenType::Bang, .lexeme = "!", .position { .line = 1, .column = 9 } });
+    auto token_inner = Token({ .type = TokenType::Bang, .lexeme = "!", .position { .line = 1, .column = 10 } });
+    auto unary_inner = std::make_unique<Expressions::Unary>(token_inner, std::move(bool_expr));
+    auto unary = std::make_unique<Expressions::Unary>(token, std::move(unary_inner));
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(unary)));
+
+    fmt::print(stderr, "#{} {}#", stmts, expected);
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}

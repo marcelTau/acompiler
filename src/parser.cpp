@@ -177,6 +177,11 @@ auto Parser::primary() -> Result<UniqExpression> {
         auto number = std::make_unique<Expressions::Number>(previous().lexeme);
         return Result<UniqExpression>(std::move(number));
     }
+
+    if (checkAndAdvance(TokenType::True, TokenType::False)) {
+        auto bool_expression = std::make_unique<Expressions::Bool>(previous().lexeme);
+        return Result<UniqExpression>(std::move(bool_expression));
+    }
     return errorExpr(peek(), "Expect expression.");
 }
 
