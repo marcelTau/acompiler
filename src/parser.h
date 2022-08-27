@@ -79,6 +79,7 @@ namespace Expressions {
     struct BinaryOperator;
     struct Number;
     struct Bool;
+    struct Variable;
     struct Unary;
 
     struct ExpressionVisitor {
@@ -86,6 +87,7 @@ namespace Expressions {
         virtual void visit(BinaryOperator& expression) = 0;
         virtual void visit(Number& expression) = 0;
         virtual void visit(Bool& expression) = 0;
+        virtual void visit(Variable& expression) = 0;
         virtual void visit(Unary& expression) = 0;
     };
 
@@ -142,6 +144,16 @@ namespace Expressions {
         }
 
         bool value;
+    };
+
+    struct Variable : public ExpressionAcceptor<Variable> {
+        Variable(std::string_view name)
+            : name(name) {}
+
+        std::string to_string() final {
+            return fmt::format("VariableExpression: .name {{ {} }}", name);
+        }
+        std::string name;
     };
 
     struct Unary : public ExpressionAcceptor<Unary> {

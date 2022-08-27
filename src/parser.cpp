@@ -182,6 +182,12 @@ auto Parser::primary() -> Result<UniqExpression> {
         auto bool_expression = std::make_unique<Expressions::Bool>(previous().lexeme);
         return Result<UniqExpression>(std::move(bool_expression));
     }
+
+    if (checkAndAdvance(TokenType::Identifier)) {
+        auto variable_expression = std::make_unique<Expressions::Variable>(previous().lexeme);
+        return Result<UniqExpression>(std::move(variable_expression));
+    }
+
     return errorExpr(peek(), "Expect expression.");
 }
 

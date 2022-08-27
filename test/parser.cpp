@@ -20,6 +20,8 @@ template<typename FormatContext>
 auto fmt::formatter<Parser::StatementList>::format(const Parser::StatementList& sl, FormatContext& ctx) {
     std::stringstream ss;
 
+    ss << '\n';
+
     for (const auto& statement : sl) {
         ss << statement->to_string() << '\n';
     }
@@ -251,7 +253,6 @@ TEST(parser, variable_assignment_with_unary_negation_false) {
     auto unary = std::make_unique<Expressions::Unary>(token, std::move(bool_expr));
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(unary)));
 
-    fmt::print(stderr, "#{} {}#", stmts, expected);
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
@@ -267,7 +268,6 @@ TEST(parser, variable_assignment_with_unary_negation_true) {
     auto unary = std::make_unique<Expressions::Unary>(token, std::move(bool_expr));
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(unary)));
 
-    fmt::print(stderr, "#{} {}#", stmts, expected);
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
@@ -286,6 +286,20 @@ TEST(parser, variable_assignment_with_double_unary_negation_true) {
     auto unary = std::make_unique<Expressions::Unary>(token, std::move(unary_inner));
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(unary)));
 
-    fmt::print(stderr, "#{} {}#", stmts, expected);
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, variable_assignment_with_variable_identifier) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a = 10; let b = a");
+    auto stmts = p.parse(tokens);
+
+    Parser::StatementList expected;
+    auto number = std::make_unique<Expressions::Number>("10");
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number)));
+
+    auto var = std::make_unique<Expressions::Variable>("a");
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("b", std::move(var)));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
