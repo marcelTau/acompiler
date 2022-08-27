@@ -9,7 +9,10 @@ set(TEST_NAME ${PROJECT_NAME}_tests)
 set(SOURCES
     src/scanner.cpp
     src/scanner.h
+
+    src/parser.cpp
     src/parser.h
+
     src/token.cpp
     src/token.h
 )
