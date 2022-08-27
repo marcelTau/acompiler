@@ -166,6 +166,7 @@ public:
     [[nodiscard]] auto assignment() -> Result<UniqExpression>;
 
     [[nodiscard]] auto term() -> Result<UniqExpression>;
+    [[nodiscard]] auto factor() -> Result<UniqExpression>;
     [[nodiscard]] auto primary() -> Result<UniqExpression>;
 
 private:

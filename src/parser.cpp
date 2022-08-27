@@ -117,6 +117,27 @@ auto Parser::assignment() -> Result<UniqExpression> {
 }
 
 auto Parser::term() -> Result<UniqExpression> {
+    auto expr = factor();
+    if (!expr) {
+        return expr.get_err();
+    }
+
+    auto expr_unwrapped = expr.unwrap();
+
+    while (checkAndAdvance(TokenType::Plus, TokenType::Minus)) {
+        auto op = previous();
+        auto right = factor();
+
+        if (!right) {
+            return right.get_err();
+        }
+        expr_unwrapped = std::make_unique<Expressions::BinaryOperator>(std::move(expr_unwrapped), op, right.unwrap());
+    }
+
+    return expr_unwrapped;
+}
+
+auto Parser::factor() -> Result<UniqExpression> {
     auto expr = primary(); // @todo change
     if (!expr) {
         return Result<UniqExpression>::Error(expr.get_err());
@@ -124,12 +145,11 @@ auto Parser::term() -> Result<UniqExpression> {
 
     auto expr_unwrapped = expr.unwrap();
 
-    while (checkAndAdvance(TokenType::Plus, TokenType::Minus)) {
+    while (checkAndAdvance(TokenType::Star, TokenType::Slash)) {
         auto op = previous();
         auto right = primary(); // @todo change
-
         if (!right) {
-            return Result<UniqExpression>::Error(right.get_err());
+            return right.get_err();
         }
         expr_unwrapped = std::make_unique<Expressions::BinaryOperator>(std::move(expr_unwrapped), op, right.unwrap());
     }

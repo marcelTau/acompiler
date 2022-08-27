@@ -46,6 +46,7 @@ void Scanner::nextToken() {
         SINGLE_TOKEN('+', Plus);
         SINGLE_TOKEN(';', Semicolon);
         SINGLE_TOKEN('*', Star);
+        SINGLE_TOKEN('/', Slash);
         NESTED_TOKEN('!', '=', BangEqual, Bang);
         NESTED_TOKEN('=', '=', EqualEqual, Equal);
         NESTED_TOKEN('<', '=', LessEqual, Less);

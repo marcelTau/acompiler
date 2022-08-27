@@ -165,11 +165,70 @@ TEST(parser, variable_assignment_with_recurring_mixed_plus_minus_expressions) {
     }
 }
 
+TEST(parser, variable_assignment_with_multiplication_expression) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a = 10 * 20;");
+    auto stmts = p.parse(tokens);
 
+    Parser::StatementList expected;
 
+    auto lhs = std::make_unique<Expressions::Number>("10");
+    Token token = Token({ .type = TokenType::Star, .lexeme = "*", .position = { .line = 1, .column = 12 } });
+    auto rhs = std::make_unique<Expressions::Number>("20");
 
+    auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer)));
+    EXPECT_TRUE(is_same(stmts, expected));
 
+    if (HasFailure()) {
+        fmt::print(stderr, "#{} {}#", stmts, expected);
+    }
+}
 
+TEST(parser, variable_assignment_with_division_expression) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a = 10 / 20;");
+    auto stmts = p.parse(tokens);
 
+    Parser::StatementList expected;
 
+    auto lhs = std::make_unique<Expressions::Number>("10");
+    Token token = Token({ .type = TokenType::Slash, .lexeme = "/", .position = { .line = 1, .column = 12 } });
+    auto rhs = std::make_unique<Expressions::Number>("20");
 
+    auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer)));
+    EXPECT_TRUE(is_same(stmts, expected));
+
+    if (HasFailure()) {
+        fmt::print(stderr, "#{} {}#", stmts, expected);
+    }
+}
+
+TEST(parser, variable_assignment_with_recurring_mixed_star_slash_expressions) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a = 10 * 20 / 30;");
+    auto stmts = p.parse(tokens);
+
+    Parser::StatementList expected;
+
+    auto lhs = std::make_unique<Expressions::Number>("10");
+    Token token = Token({ .type = TokenType::Star, .lexeme = "*", .position = { .line = 1, .column = 12 } });
+    auto rhs = std::make_unique<Expressions::Number>("20");
+    Token token2 = Token({ .type = TokenType::Slash, .lexeme = "/", .position = { .line = 1, .column = 17 } });
+    auto rrhs = std::make_unique<Expressions::Number>("30");
+
+    auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
+    auto initializer2 = std::make_unique<Expressions::BinaryOperator>(std::move(initializer), token2, std::move(rrhs));
+
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer2)));
+
+    EXPECT_TRUE(is_same(stmts, expected));
+
+    if (HasFailure()) {
+        fmt::print(stderr, "#{} {}#", stmts, expected);
+    }
+}

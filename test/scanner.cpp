@@ -44,6 +44,16 @@ TEST(scanner, first_token) {
     EXPECT_EQ(tokens, expected);
 }
 
+TEST(scanner, slash_token) {
+    Scanner s;
+    auto tokens = s.scan("/");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Slash }, .lexeme { "/" }, .position { 1, 1 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 1 }, }
+    );
+    EXPECT_EQ(tokens, expected);
+}
+
 TEST(scanner, double_char_token) {
     Scanner s;
     auto tokens = s.scan("!=");
