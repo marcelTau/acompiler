@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "fmt/ranges.h"
 
 Parser::StatementList Parser::parse(const TokenList& tokens) {
     StatementList statements;
@@ -76,10 +77,61 @@ auto Parser::errorExpr(const Token& token, std::string_view msg) -> Result<UniqE
 auto Parser::declaration() -> Result<UniqStatement> {
     if (checkAndAdvance(TokenType::Let)) {
         return varDeclaration();
+    } else if (checkAndAdvance(TokenType::Fun)) {
+        return function();
     } else {
         return statement();
     }
     assert(false);
+}
+
+auto Parser::function() -> Result<UniqStatement> {
+    auto name = consume(TokenType::Identifier, "Expect function name.");
+    std::ignore = consume(TokenType::LeftParen, "Expect '(' after function name.");
+
+    std::vector<Token> params;
+    if (!check(TokenType::RightParen)) {
+        auto param = consume(TokenType::Identifier, "Expect parameter name.");
+        if (!param) {
+            return param.get_err();
+        }
+        params.push_back(param.unwrap());
+
+        while (checkAndAdvance(TokenType::Comma)) {
+            param = consume(TokenType::Identifier, "Expect parameter name.");
+            if (!param) {
+                return param.get_err();
+            }
+            params.push_back(param.unwrap());
+        }
+    }
+
+    std::ignore = consume(TokenType::RightParen, "Expect ')' after parameters.");
+
+    auto block_stmts = block();
+
+    if (!block_stmts) {
+        return block_stmts.get_err();
+    }
+
+    auto function_stmt = std::make_unique<Statements::Function>(name.unwrap(), params, block_stmts.unwrap());
+    return Result<UniqStatement>(std::move(function_stmt));
+}
+
+auto Parser::block() -> Result<std::vector<UniqStatement>> {
+    std::vector<UniqStatement> statements;
+
+    // @todo this needs to change when there are other constructs that use the
+    // end keyword such as 'if' or 'for'
+    while (!check(TokenType::End) && !isAtEnd()) {
+        auto stmt = declaration();
+        if (!stmt) {
+            return stmt.get_err();
+        }
+        statements.emplace_back(stmt.unwrap());
+    }
+    std::ignore = consume(TokenType::End, "Expect 'end' after block.");
+    return statements;
 }
 
 auto Parser::statement() -> Result<UniqStatement> {
@@ -87,6 +139,16 @@ auto Parser::statement() -> Result<UniqStatement> {
         return printStatement();
     }
     assert(false && "expression_statement()");
+}
+
+auto Parser::expressionStatement() -> Result<UniqStatement> {
+    auto expr = expression();
+    if (!expr) {
+        return expr.get_err();
+    }
+    std::ignore = consume(TokenType::Semicolon, "Expect ';' after expression.");
+
+    assert(false && "todo ddasdf");
 }
 
 auto Parser::printStatement() -> Result<UniqStatement> {

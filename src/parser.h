@@ -6,6 +6,9 @@
 #include <optional>
 #include <charconv>
 #include <cassert>
+#include <sstream>
+#include "fmt/format.h"
+#include "fmt/ranges.h"
 #include "token.h"
 #include "error.h"
 
@@ -28,12 +31,14 @@ namespace Statements {
     struct VariableDefinition;
     struct ExpressionStatement;
     struct Print;
+    struct Function;
     //struct Assignment;
 
     struct StatementVisitor {
         virtual void visit(VariableDefinition& statement) = 0;
         virtual void visit(ExpressionStatement& statement) = 0;
         virtual void visit(Print& statement) = 0;
+        virtual void visit(Function& statement) = 0;
         //virtual void visit(Assignment& statement) = 0;
 
         virtual ~StatementVisitor() = default;
@@ -74,7 +79,6 @@ namespace Statements {
     };
 
     struct Print : public StatementAcceptor<Print> {
-
         Print(std::unique_ptr<Expression> expr)
             : expression(std::move(expr))
         {
@@ -85,6 +89,32 @@ namespace Statements {
         }
 
         std::unique_ptr<Expression> expression;
+    };
+
+    struct Function : public StatementAcceptor<Function> {
+        Function(Token name, std::vector<Token> params, std::vector<std::unique_ptr<Statement>> body)
+            : name(name)
+            , params(std::move(params))
+            , body(std::move(body))
+        {
+        }
+
+        std::string to_string() final {
+            std::stringstream ss{};
+
+            for (const auto& statement : body) {
+                ss << " { " << statement->to_string() << " }, ";
+            }
+
+            return fmt::format(
+                "FunctionStatement: .name {{ {} }}, .params {{ {} }}, .body {{ {} }}",
+                name, fmt::join(params, ", "), ss.str());
+
+        }
+
+        Token name;
+        std::vector<Token> params;
+        std::vector<std::unique_ptr<Statement>> body;
     };
 
 } // namespace Statements
@@ -224,7 +254,11 @@ public:
     [[nodiscard]] auto declaration() -> Result<UniqStatement>;
     [[nodiscard]] auto varDeclaration() -> Result<UniqStatement>;
     [[nodiscard]] auto statement() -> Result<UniqStatement>;
+    [[nodiscard]] auto expressionStatement() -> Result<UniqStatement>;
     [[nodiscard]] auto printStatement() -> Result<UniqStatement>;
+    [[nodiscard]] auto function() -> Result<UniqStatement>;
+    [[nodiscard]] auto block() -> Result<std::vector<UniqStatement>>;
+
 
     [[nodiscard]] auto expression() -> Result<UniqExpression>;
     [[nodiscard]] auto assignment() -> Result<UniqExpression>;

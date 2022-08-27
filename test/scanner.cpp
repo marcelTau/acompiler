@@ -285,7 +285,20 @@ print x;
     EXPECT_EQ(tokens, expected);
 }
 
+TEST(scanner, function_with_end) {
+    Scanner s;
+    auto tokens = s.scan("fun foo() end");
 
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Fun }, .lexeme { "fun" }, .position { 1, 3 }, },
+        Token { .type { TokenType::Identifier }, .lexeme { "foo" }, .position { 1, 7 }, },
+        Token { .type { TokenType::LeftParen }, .lexeme { "(" }, .position { 1, 8 }, },
+        Token { .type { TokenType::RightParen }, .lexeme { ")" }, .position { 1, 9 }, },
+        Token { .type { TokenType::End }, .lexeme { "end" }, .position { 1, 13 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 13 }, }
+    );
+    EXPECT_EQ(tokens, expected) << fmt::format("\n{}\n{}\n", expected, tokens);
+}
 
 
 

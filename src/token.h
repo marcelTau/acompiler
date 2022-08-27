@@ -138,7 +138,7 @@ struct fmt::formatter<Token> {
     constexpr auto parse(ParseContext& ctx);
 
     template<typename FormatContext>
-    auto format(const Token& token, FormatContext& ctx);
+    auto format(const Token& token, FormatContext& ctx) const;
 };
 
 template<typename ParseContext>
@@ -147,6 +147,6 @@ constexpr auto fmt::formatter<Token>::parse(ParseContext& ctx) {
 }
 
 template<typename FormatContext>
-auto fmt::formatter<Token>::format(const Token& token, FormatContext& ctx) {
+auto fmt::formatter<Token>::format(const Token& token, FormatContext& ctx) const {
     return fmt::format_to(ctx.out(), "Token ({}, '{}', [{},{}])", token.type, token.lexeme, token.position.line, token.position.column);
 }
