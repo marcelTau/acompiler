@@ -3,10 +3,13 @@
 #include <fmt/core.h>
 #include "parser.h"
 #include "scanner.h"
+#include "printer.h"
 
 int main(int ac, char **av) {
     Scanner s;
     Parser p;
+
+    
 
     if (ac == 1) {
         fmt::print(stderr, "No file provided\n");

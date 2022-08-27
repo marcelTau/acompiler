@@ -35,12 +35,13 @@ auto Parser::consume(const TokenType& ttype, std::string_view msg) -> Result<Tok
     }
 }
 
-auto Parser::checkAndAdvance(const TokenType& ttype) -> bool const {
-    const auto result = check(ttype);
-    if (result) {
+template <typename ...Tokens>
+auto Parser::checkAndAdvance(Tokens&& ...tokens) -> bool const {
+    bool found = (check(tokens) || ...);
+    if (found) {
         advance();
     }
-    return result;
+    return found;
 }
 
 auto Parser::check(const TokenType& ttype) -> bool const {
@@ -107,12 +108,33 @@ auto Parser::expression() -> Result<UniqExpression> {
 }
 
 auto Parser::assignment() -> Result<UniqExpression> {
-    auto expr = primary(); // @todo change this
+    auto expr = term();
 
     if (checkAndAdvance(TokenType::Equal)) {
         fmt::print("todo multi assignment");
     }
     return expr;
+}
+
+auto Parser::term() -> Result<UniqExpression> {
+    auto expr = primary(); // @todo change
+    if (!expr) {
+        return Result<UniqExpression>::Error(expr.get_err());
+    }
+
+    auto expr_unwrapped = expr.unwrap();
+
+    while (checkAndAdvance(TokenType::Plus, TokenType::Minus)) {
+        auto op = previous();
+        auto right = primary(); // @todo change
+
+        if (!right) {
+            return Result<UniqExpression>::Error(right.get_err());
+        }
+        expr_unwrapped = std::make_unique<Expressions::BinaryOperator>(std::move(expr_unwrapped), op, right.unwrap());
+    }
+
+    return expr_unwrapped;
 }
 
 auto Parser::primary() -> Result<UniqExpression> {

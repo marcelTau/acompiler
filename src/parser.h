@@ -27,12 +27,12 @@ namespace Statements {
 
     struct VariableDefinition;
     struct ExpressionStatement;
-    struct Assignment;
+    //struct Assignment;
 
     struct StatementVisitor {
         virtual void visit(VariableDefinition& statement) = 0;
         virtual void visit(ExpressionStatement& statement) = 0;
-        virtual void visit(Assignment& statement) = 0;
+        //virtual void visit(Assignment& statement) = 0;
 
         virtual ~StatementVisitor() = default;
     };
@@ -61,7 +61,7 @@ namespace Statements {
         std::unique_ptr<Expression> initializer;
 
         std::string to_string() final {
-            return fmt::format("VariableDefinition: .name = {}, .initializer {}", name, initializer ? initializer->to_string() : "nullptr");
+            return fmt::format("VariableDefinition: .name = {{ {} }}, .initializer {{ {} }}", name, initializer ? initializer->to_string() : "nullptr");
         }
     };
 
@@ -94,7 +94,21 @@ namespace Expressions {
 
     struct Assignment : public ExpressionAcceptor<Assignment> {
     };
+
     struct BinaryOperator : public ExpressionAcceptor<BinaryOperator> {
+        BinaryOperator(std::unique_ptr<Expression> lhs, Token operator_type, std::unique_ptr<Expression> rhs) 
+            : lhs(std::move(lhs))
+            , operator_type(operator_type)
+            , rhs(std::move(rhs))
+        {}
+
+        std::string to_string() final {
+            return fmt::format("BinaryOperator: .lhs {{ {} }}, .operator {{ {} }}, .rhs {{ {} }}", lhs->to_string(), operator_type, rhs->to_string());
+        }
+
+        std::unique_ptr<Expression> lhs;
+        Token operator_type;
+        std::unique_ptr<Expression> rhs;
     };
     struct Number : public ExpressionAcceptor<Number> {
         Number(std::string_view sv)
@@ -108,7 +122,7 @@ namespace Expressions {
         int value;
 
         std::string to_string() final {
-            return fmt::format("NumberExpression: {}", value);
+            return fmt::format("NumberExpression: .value {{ {} }}", value);
         }
     };
 
@@ -135,7 +149,8 @@ public:
     [[nodiscard]] auto peek() -> Token;
     [[nodiscard]] auto consume(const TokenType& ttype, std::string_view msg) -> Result<Token>;
 
-    [[nodiscard]] auto checkAndAdvance(const TokenType& ttype) -> bool const;
+    template <typename ...Tokens>
+    [[nodiscard]] auto checkAndAdvance(Tokens&& ...tokens) -> bool const;
     [[nodiscard]] auto check(const TokenType& ttype) -> bool const;
 
     auto advance() -> Token;
@@ -149,6 +164,8 @@ public:
     [[nodiscard]] auto varDeclaration() -> Result<UniqStatement>;
     [[nodiscard]] auto expression() -> Result<UniqExpression>;
     [[nodiscard]] auto assignment() -> Result<UniqExpression>;
+
+    [[nodiscard]] auto term() -> Result<UniqExpression>;
     [[nodiscard]] auto primary() -> Result<UniqExpression>;
 
 private:
