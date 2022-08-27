@@ -78,11 +78,13 @@ namespace Expressions {
     struct Assignment;
     struct BinaryOperator;
     struct Number;
+    struct Unary;
 
     struct ExpressionVisitor {
         virtual void visit(Assignment& expression) = 0;
         virtual void visit(BinaryOperator& expression) = 0;
         virtual void visit(Number& expression) = 0;
+        virtual void visit(Unary& expression) = 0;
     };
 
     template<typename T>
@@ -110,6 +112,7 @@ namespace Expressions {
         Token operator_type;
         std::unique_ptr<Expression> rhs;
     };
+
     struct Number : public ExpressionAcceptor<Number> {
         Number(std::string_view sv)
         {
@@ -119,11 +122,27 @@ namespace Expressions {
             }
         }
 
-        int value;
-
         std::string to_string() final {
             return fmt::format("NumberExpression: .value {{ {} }}", value);
         }
+
+        int value;
+
+    };
+
+    struct Unary : public ExpressionAcceptor<Unary> {
+        Unary(Token operator_type, std::unique_ptr<Expression> rhs) 
+            : operator_type(operator_type)
+            , rhs(std::move(rhs))
+        {
+        }
+
+        std::string to_string() final {
+            return fmt::format("UnaryExpression: .operator {{ {} }}, .rhs {{ {} }}", operator_type, rhs->to_string());
+        }
+
+        Token operator_type;
+        std::unique_ptr<Expression> rhs;
     };
 
 } // namespace Expressions
@@ -167,6 +186,7 @@ public:
 
     [[nodiscard]] auto term() -> Result<UniqExpression>;
     [[nodiscard]] auto factor() -> Result<UniqExpression>;
+    [[nodiscard]] auto unary() -> Result<UniqExpression>;
     [[nodiscard]] auto primary() -> Result<UniqExpression>;
 
 private:

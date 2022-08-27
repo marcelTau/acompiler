@@ -50,11 +50,7 @@ TEST(parser, var_with_name) {
 
     Parser::StatementList expected;
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", nullptr));
-    EXPECT_TRUE(is_same(stmts, expected));
-
-    if (HasFailure()) {
-        fmt::print(stderr, "#{} {}#", stmts, expected);
-    }
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
 TEST(parser, variable_assignment) {
@@ -66,11 +62,7 @@ TEST(parser, variable_assignment) {
     Parser::StatementList expected;
     auto number = std::make_unique<Expressions::Number>("10");
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number)));
-    EXPECT_TRUE(is_same(stmts, expected));
-
-    if (HasFailure()) {
-        fmt::print(stderr, "#{} {}#", stmts, expected);
-    }
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
 TEST(parser, variable_assignment_with_plus_expression) {
@@ -87,11 +79,7 @@ TEST(parser, variable_assignment_with_plus_expression) {
 
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer)));
-    EXPECT_TRUE(is_same(stmts, expected));
-
-    if (HasFailure()) {
-        fmt::print(stderr, "#{} {}#", stmts, expected);
-    }
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
 TEST(parser, variable_assignment_with_minus_expression) {
@@ -108,11 +96,7 @@ TEST(parser, variable_assignment_with_minus_expression) {
 
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer)));
-    EXPECT_TRUE(is_same(stmts, expected));
-
-    if (HasFailure()) {
-        fmt::print(stderr, "#{} {}#", stmts, expected);
-    }
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
 TEST(parser, variable_assignment_with_recurring_plus_expressions) {
@@ -132,11 +116,7 @@ TEST(parser, variable_assignment_with_recurring_plus_expressions) {
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
     auto initializer2 = std::make_unique<Expressions::BinaryOperator>(std::move(initializer), token2, std::move(rrhs));
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer2)));
-    EXPECT_TRUE(is_same(stmts, expected));
-
-    if (HasFailure()) {
-        fmt::print(stderr, "#{} {}#", stmts, expected);
-    }
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
 TEST(parser, variable_assignment_with_recurring_mixed_plus_minus_expressions) {
@@ -158,11 +138,7 @@ TEST(parser, variable_assignment_with_recurring_mixed_plus_minus_expressions) {
 
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer2)));
 
-    EXPECT_TRUE(is_same(stmts, expected));
-
-    if (HasFailure()) {
-        fmt::print(stderr, "#{} {}#", stmts, expected);
-    }
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
 TEST(parser, variable_assignment_with_multiplication_expression) {
@@ -179,11 +155,7 @@ TEST(parser, variable_assignment_with_multiplication_expression) {
 
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer)));
-    EXPECT_TRUE(is_same(stmts, expected));
-
-    if (HasFailure()) {
-        fmt::print(stderr, "#{} {}#", stmts, expected);
-    }
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
 TEST(parser, variable_assignment_with_division_expression) {
@@ -200,11 +172,7 @@ TEST(parser, variable_assignment_with_division_expression) {
 
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer)));
-    EXPECT_TRUE(is_same(stmts, expected));
-
-    if (HasFailure()) {
-        fmt::print(stderr, "#{} {}#", stmts, expected);
-    }
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
 TEST(parser, variable_assignment_with_recurring_mixed_star_slash_expressions) {
@@ -226,11 +194,7 @@ TEST(parser, variable_assignment_with_recurring_mixed_star_slash_expressions) {
 
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer2)));
 
-    EXPECT_TRUE(is_same(stmts, expected));
-
-    if (HasFailure()) {
-        fmt::print(stderr, "#{} {}#", stmts, expected);
-    }
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
 TEST(parser, variable_assignment_with_recurring_precedence_expressions) {
@@ -257,9 +221,20 @@ TEST(parser, variable_assignment_with_recurring_precedence_expressions) {
 
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer2)));
 
-    EXPECT_TRUE(is_same(stmts, expected));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
 
-    if (HasFailure()) {
-        fmt::print(stderr, "#{} {}#", stmts, expected);
-    }
+TEST(parser, variable_assignment_with_unary_minus) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a = -10;");
+    auto stmts = p.parse(tokens);
+
+    Parser::StatementList expected;
+    auto number = std::make_unique<Expressions::Number>("10");
+    auto token = Token({ .type = TokenType::Minus, .lexeme = "-", .position { .line = 1, .column = 9 } });
+    auto unary = std::make_unique<Expressions::Unary>(token, std::move(number));
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(unary)));
+
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }

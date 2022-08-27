@@ -138,7 +138,7 @@ auto Parser::term() -> Result<UniqExpression> {
 }
 
 auto Parser::factor() -> Result<UniqExpression> {
-    auto expr = primary(); // @todo change
+    auto expr = unary();
     if (!expr) {
         return Result<UniqExpression>::Error(expr.get_err());
     }
@@ -147,7 +147,7 @@ auto Parser::factor() -> Result<UniqExpression> {
 
     while (checkAndAdvance(TokenType::Star, TokenType::Slash)) {
         auto op = previous();
-        auto right = primary(); // @todo change
+        auto right = unary();
         if (!right) {
             return right.get_err();
         }
@@ -155,6 +155,21 @@ auto Parser::factor() -> Result<UniqExpression> {
     }
 
     return expr_unwrapped;
+}
+
+auto Parser::unary() -> Result<UniqExpression> {
+    if (checkAndAdvance(TokenType::Bang, TokenType::Minus)) {
+        auto op = previous();
+        auto right = unary();
+
+        if (!right) {
+            return right.get_err();
+        }
+        auto unaryExpr = std::make_unique<Expressions::Unary>(op, right.unwrap());
+        return Result<UniqExpression>(std::move(unaryExpr));
+    } else {
+        return primary(); // @todo change
+    }
 }
 
 auto Parser::primary() -> Result<UniqExpression> {
