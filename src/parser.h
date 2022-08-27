@@ -7,6 +7,7 @@
 #include <charconv>
 #include <cassert>
 #include "token.h"
+#include "error.h"
 
 /// @todo ugly hacky stuff, try to fix this pls
 namespace Expressions {
@@ -132,16 +133,14 @@ public:
 
         m_tokens = tokens;
 
-        while (not isAtEnd()) {
-            try {
-                statements.push_back(declaration());
-            } catch (std::exception& e) {
-                fmt::print(stderr, "ERROR: (TODO): {}\n", e.what());
-                return statements;
-            } catch (...) {
-                fmt::print(stderr, "ERROR: (TODO): ...\n");
+        while (! isAtEnd()) {
+            auto decl = declaration();
+
+            if (!decl) {
                 return statements;
             }
+
+            statements.push_back(decl.unwrap());
         }
 
         return statements;
@@ -149,15 +148,12 @@ public:
 
     /// --- Helper functions --- ///
     [[nodiscard]] auto isAtEnd() -> bool { return peek().type == TokenType::Eof; }
-
     [[nodiscard]] auto peek() -> Token { return m_tokens[m_current]; }
-
-    [[nodiscard]] auto consume(const TokenType& ttype, std::string_view msg) -> std::optional<Token> {
+    [[nodiscard]] auto consume(const TokenType& ttype, std::string_view msg) -> Result<Token> {
         if (check(ttype)) {
-            return advance();
+            return Result<Token>(advance());
         } else {
-            fmt::print(stderr, "Error: {}", msg);
-            return std::nullopt;
+            return Result<Token>::Error(ErrorType::ParserError, peek(), msg);
         }
     }
 
@@ -187,37 +183,52 @@ public:
         return m_tokens[m_current - 1];
     }
 
+    [[nodiscard]] auto errorStmt(const Token& token, std::string_view msg) -> Result<UniqStatement> {
+        m_hasError = true;
+        return Result<UniqStatement>::Error(ErrorType::ParserError, token, msg);
+    }
+
+    [[nodiscard]] auto errorExpr(const Token& token, std::string_view msg) -> Result<UniqExpression> {
+        m_hasError = true;
+        return Result<UniqExpression>::Error(ErrorType::ParserError, token, msg);
+    }
 
     /// --- Parsing functions --- ///
-    [[nodiscard]] auto declaration() -> UniqStatement {
+    [[nodiscard]] auto declaration() -> Result<UniqStatement> {
         if (checkAndAdvance(TokenType::Let)) {
             return varDeclaration();
         }
-        throw "declaration";
+        assert(false);
     }
 
-    [[nodiscard]] auto varDeclaration() -> UniqStatement {
+    [[nodiscard]] auto varDeclaration() -> Result<UniqStatement> {
         const auto name = consume(TokenType::Identifier, "Expect variable name.");
 
-        if (!name.has_value()) {
-            throw;
+        if (!name) {
+            return Result<UniqStatement>::Error(name.get_err());
         }
 
         UniqExpression initializer;
 
         if (checkAndAdvance(TokenType::Equal)) {
-            initializer = expression();
+            if (auto result = expression(); ! result) {
+                initializer = nullptr;
+            } else {
+                initializer = result.unwrap();
+            }
         }
 
         std::ignore = consume(TokenType::Semicolon, "Expect ';' after variable declaration.");
-        return std::make_unique<Statements::VariableDefinition>(name->lexeme, std::move(initializer));
+
+        auto varDefinition = std::make_unique<Statements::VariableDefinition>(name.unwrap().lexeme, std::move(initializer));
+        return Result<UniqStatement>(std::move(varDefinition));
     }
 
-    [[nodiscard]] auto expression() -> UniqExpression {
+    [[nodiscard]] auto expression() -> Result<UniqExpression> {
         return assignment();
     }
 
-    [[nodiscard]] auto assignment() -> UniqExpression {
+    [[nodiscard]] auto assignment() -> Result<UniqExpression> {
         auto expr = primary(); // @todo change this
 
         if (checkAndAdvance(TokenType::Equal)) {
@@ -226,16 +237,17 @@ public:
         return expr;
     }
 
-    [[nodiscard]] auto primary() -> UniqExpression {
+    [[nodiscard]] auto primary() -> Result<UniqExpression> {
         if (checkAndAdvance(TokenType::Number)) {
-            return std::make_unique<Expressions::Number>(previous().lexeme);
+            auto number = std::make_unique<Expressions::Number>(previous().lexeme);
+            return Result<UniqExpression>(std::move(number));
         }
-
-        return nullptr;
+        return errorExpr(peek(), "Expect expression.");
     }
 
 
 private:
     TokenList m_tokens;
     std::size_t m_current { 0 };
+    bool m_hasError { false };
 };
