@@ -31,7 +31,7 @@ auto Parser::consume(const TokenType& ttype, std::string_view msg) -> Result<Tok
     if (check(ttype)) {
         return Result<Token>(advance());
     } else {
-        return Result<Token>::Error(ErrorType::ParserError, peek(), msg);
+        return Result<Token>::ParseError(peek(), msg);
     }
 }
 
@@ -63,12 +63,12 @@ auto Parser::previous() -> Token {
 
 auto Parser::errorStmt(const Token& token, std::string_view msg) -> Result<UniqStatement> {
     m_hasError = true;
-    return Result<UniqStatement>::Error(ErrorType::ParserError, token, msg);
+    return Result<UniqStatement>::ParseError(token, msg);
 }
 
 auto Parser::errorExpr(const Token& token, std::string_view msg) -> Result<UniqExpression> {
     m_hasError = true;
-    return Result<UniqExpression>::Error(ErrorType::ParserError, token, msg);
+    return Result<UniqExpression>::ParseError(token, msg);
 }
 
 /// --- Parsing functions --- ///

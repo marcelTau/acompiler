@@ -4,6 +4,7 @@
 #include <cassert>
 #include <string_view>
 #include <source_location>
+#include <variant>
 #include "token.h"
 
 enum class ErrorType : std::uint8_t {
@@ -17,55 +18,50 @@ struct Error {
     std::string_view msg;
 };
 
+/**
+ * @brief `Result` is a wrapper around a std::variant that holds a good value or an error value.
+ *        It provides a `rust-like` interface for errorhandling.
+ */
 template <typename T>
 struct Result {
-    Result(T &&value) : ok_value(std::move(value)) {}
-    //Result(const T& value) : ok_value(value) {}
-    Result(const Error& error) {
-        error_value = error;
-    }
+    Result(struct Error error) : value(error) {}
+    Result(T &&value) : value(std::move(value)) {}
 
-    static Result Error(ErrorType type, const Token& token, std::string_view msg) {
+    static auto Error(ErrorType type, const Token& token, std::string_view msg) -> Result {
         struct Error e { .type = type, .token = token, .msg = msg };
         return Result(e);
     }
 
-    static Result Error(const struct Error& error) {
+    static auto Error(const struct Error& error) -> Result {
         return Result(error);
     }
 
+    static auto ParseError(const Token& token, std::string_view msg) -> Result {
+        struct Error e { .type = ErrorType::ParserError, .token = token, .msg = msg };
+        return Result(e);
+    }
+
     constexpr operator bool() const {
-        // Default error type, NO ERROR
-        return this->error_value.type == ErrorType::None;
+        return !std::holds_alternative<struct Error>(value);
     }
 
     [[nodiscard]] constexpr struct Error get_err() const {
-        return error_value;
+        return std::get<struct Error>(value);
     }
 
     T unwrap(/*const std::source_location& loc = std::source_location::current()*/) {
-        if (this->error_value.type != ErrorType::None) {
+        if (std::holds_alternative<struct Error>(value)) {
             assert(false && "1");
-            //assert(false && fmt::format("Panic at unwrap at {} [{}, {}] ({})\n", loc.file_name(), loc.line(), loc.column(), loc.function_name()).c_str());
         }
-        return std::move(ok_value);
+        return std::move(std::get<T>(value));
     }
     T unwrap(/*const std::source_location& loc = std::source_location::current()*/) const {
-        if (this->error_value.type != ErrorType::None) {
+        if (std::holds_alternative<struct Error>(value)) {
             assert(false && "1");
-            //assert(false && fmt::format("Panic at unwrap at {} [{}, {}] ({})\n", loc.file_name(), loc.line(), loc.column(), loc.function_name()).c_str());
         }
-        return std::move(ok_value);
+        return std::move(std::get<T>(value));
     }
 
-    //constexpr T unwrap() const {
-        //if (not *this) {
-            //assert(false && "Panic at unwrap()");
-        //}
-        //return std::move(ok_value);
-    //}
-
 private:
-    T ok_value;
-    struct Error error_value;
+    std::variant<T, struct Error> value;
 };
