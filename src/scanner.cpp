@@ -40,6 +40,7 @@ void Scanner::nextToken() {
     switch (c) {
         SINGLE_TOKEN('(', LeftParen);
         SINGLE_TOKEN(')', RightParen);
+        SINGLE_TOKEN(':', Colon);
         SINGLE_TOKEN(',', Comma);
         SINGLE_TOKEN('.', Dot);
         SINGLE_TOKEN('-', Minus);

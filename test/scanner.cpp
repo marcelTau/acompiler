@@ -185,6 +185,22 @@ TEST(scanner, whole_line_of_code) {
     EXPECT_EQ(tokens, expected);
 }
 
+TEST(scanner, variable_assignment_with_type_annotation) {
+    Scanner s;
+    auto tokens = s.scan("let x: Int = 10;");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Let }, .lexeme { "let" }, .position { 1, 3 }, },
+        Token { .type { TokenType::Identifier }, .lexeme { "x" }, .position { 1, 5 }, },
+        Token { .type { TokenType::Colon }, .lexeme { ":" }, .position { 1, 6 }, },
+        Token { .type { TokenType::Int }, .lexeme { "Int" }, .position { 1, 10 }, },
+        Token { .type { TokenType::Equal }, .lexeme { "=" }, .position { 1, 12 }, },
+        Token { .type { TokenType::Number }, .lexeme { "10" }, .position { 1, 15 }, },
+        Token { .type { TokenType::Semicolon }, .lexeme { ";" }, .position { 1, 16 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 16 }, }
+    );
+    EXPECT_EQ(tokens, expected) << fmt::format("\n{}\n{}\n", expected, tokens);
+}
+
 TEST(scanner, if_statement) {
     Scanner s;
     auto tokens = s.scan("if (x >= 10) then");

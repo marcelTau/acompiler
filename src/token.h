@@ -7,6 +7,7 @@
 static constexpr const char *const TokenTypeNames[] = {
     "LeftParen",
     "RightParen",
+    "Colon",
     "Comma",
     "Dot",
     "Minus",
@@ -41,6 +42,7 @@ static constexpr const char *const TokenTypeNames[] = {
     "Then",
     "Do",
     "End",
+    "Int",
     "Hashtag",
     "Error",
     "Eof",
@@ -50,6 +52,7 @@ enum class TokenType : std::uint8_t {
     // Single-character tokens.
     LeftParen,
     RightParen,
+    Colon,
     Comma,
     Dot,
     Minus,
@@ -88,6 +91,7 @@ enum class TokenType : std::uint8_t {
     Then,
     Do,
     End,
+    Int,
 
     Hashtag,
     Error,

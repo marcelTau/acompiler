@@ -97,6 +97,7 @@ namespace Statements {
             , params(std::move(params))
             , body(std::move(body))
         {
+            stack_size = params.size() * 4; // @todo for now assume that every datatype use 4 bytes and don't care about local variables
         }
 
         std::string to_string() final {
@@ -109,12 +110,12 @@ namespace Statements {
             return fmt::format(
                 "FunctionStatement: .name {{ {} }}, .params {{ {} }}, .body {{ {} }}",
                 name, fmt::join(params, ", "), ss.str());
-
         }
 
         Token name;
         std::vector<Token> params;
         std::vector<std::unique_ptr<Statement>> body;
+        std::size_t stack_size { 0 };
     };
 
 } // namespace Statements

@@ -4,12 +4,12 @@
 #include "parser.h"
 #include "scanner.h"
 #include "printer.h"
-//#include "emitter.h"
+#include "emitter.h"
 
 int main(int ac, char **av) {
     Scanner s;
     Parser p;
-    //Emitter::Emitter e;
+    Emitter::Emitter e;
 
     if (ac == 1) {
         fmt::print(stderr, "No file provided\n");
@@ -36,7 +36,7 @@ int main(int ac, char **av) {
         fmt::print("Statement: {}\n", statement->to_string());
     }
 
-    //e.emit(statements);
+    e.emit(statements);
 
     return 0;
 }
