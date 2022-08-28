@@ -61,6 +61,5 @@ private:
         { "then", TokenType::Then },
         { "do", TokenType::Do },
         { "end", TokenType::End },
-        { "Int", TokenType::Int },
     };
 };

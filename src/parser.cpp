@@ -1,6 +1,11 @@
 #include "parser.h"
 #include "fmt/ranges.h"
 
+Parser::Parser() {
+    m_dataTypes.push_back({ .name = "Uninitialized", .size = 0 });
+    m_dataTypes.push_back({ .name = "Int", .size = 4 });
+}
+
 Parser::StatementList Parser::parse(const TokenList& tokens) {
     StatementList statements;
 
@@ -138,7 +143,26 @@ auto Parser::statement() -> Result<UniqStatement> {
     if (checkAndAdvance(TokenType::Print)) {
         return printStatement();
     }
+    if (checkAndAdvance(TokenType::Return)) {
+        return returnStatement();
+    }
     assert(false && "expression_statement()");
+}
+
+auto Parser::returnStatement() -> Result<UniqStatement> {
+    std::unique_ptr<Expression> value;
+    if (!check(TokenType::Semicolon)) {
+        auto value_result = expression();
+        if (!value_result) {
+            return value_result.get_err();
+        }
+        value = value_result.unwrap();
+    }
+
+    std::ignore = consume(TokenType::Semicolon, "Expect ';' after return.");
+
+    auto returnStatement = std::make_unique<Statements::Return>(std::move(value));
+    return Result<UniqStatement>(std::move(returnStatement));
 }
 
 auto Parser::expressionStatement() -> Result<UniqStatement> {
@@ -169,6 +193,29 @@ auto Parser::varDeclaration() -> Result<UniqStatement> {
         return Result<UniqStatement>::Error(name.get_err());
     }
 
+    DataType datatype = {};
+
+    if (checkAndAdvance(TokenType::Colon)) {
+        auto datatype_token = consume(TokenType::Identifier, "Exptect datatype after ':'.");
+
+        if (!datatype_token) {
+            return datatype_token.get_err();
+        }
+
+        // @todo refactor this to use a hash map 
+        for (const auto& dt : m_dataTypes) {
+            if (dt.name == datatype_token.unwrap().lexeme) {
+                datatype = dt;
+                break;
+            }
+        }
+
+        if (datatype.name == "Uninitialized") {
+            return Result<UniqStatement>::ParseError(datatype_token.unwrap(), 
+                    fmt::format("Expect datatype after ':' found {}", datatype_token.unwrap().lexeme));
+        }
+    }
+
     UniqExpression initializer;
 
     if (checkAndAdvance(TokenType::Equal)) {
@@ -181,7 +228,7 @@ auto Parser::varDeclaration() -> Result<UniqStatement> {
 
     std::ignore = consume(TokenType::Semicolon, "Expect ';' after variable declaration.");
 
-    auto varDefinition = std::make_unique<Statements::VariableDefinition>(name.unwrap().lexeme, std::move(initializer));
+    auto varDefinition = std::make_unique<Statements::VariableDefinition>(name.unwrap().lexeme, std::move(initializer), datatype);
     return Result<UniqStatement>(std::move(varDefinition));
 }
 

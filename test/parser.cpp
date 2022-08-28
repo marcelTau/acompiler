@@ -67,6 +67,19 @@ TEST(parser, variable_assignment) {
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
+TEST(parser, variable_assignment_with_type_annotation) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a: Int = 10;");
+    auto stmts = p.parse(tokens);
+
+    Parser::StatementList expected;
+    DataType dt { .name = "Int", .size = 4 };
+    auto number = std::make_unique<Expressions::Number>("10");
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number), dt));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
 TEST(parser, variable_assignment_with_plus_expression) {
     Scanner s;
     Parser p;
@@ -80,6 +93,7 @@ TEST(parser, variable_assignment_with_plus_expression) {
     auto rhs = std::make_unique<Expressions::Number>("20");
 
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
+
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer)));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
@@ -399,5 +413,52 @@ TEST(parser, non_empty_function_with_parameters) {
     auto funcStmt = std::make_unique<Statements::Function>(name, std::move(params), std::move(body));
 
     expected.push_back(std::move(funcStmt));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, return_without_expression) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("return;");
+    auto stmts = p.parse(tokens);
+
+    std::unique_ptr<Expressions::Expression> value;
+    auto returnStmt = std::make_unique<Statements::Return>(std::move(value));
+
+    expected.push_back(std::move(returnStmt));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, return_with_simple_expression) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("return 8;");
+    auto stmts = p.parse(tokens);
+
+    auto value = std::make_unique<Expressions::Number>("8");
+    auto returnStmt = std::make_unique<Statements::Return>(std::move(value));
+
+    expected.push_back(std::move(returnStmt));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, return_with_complex_expression) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("return 1 + 2;");
+    auto stmts = p.parse(tokens);
+
+    auto number1 = std::make_unique<Expressions::Number>("1");
+    auto number2 = std::make_unique<Expressions::Number>("2");
+    Token tokenPlus = Token({ .type = TokenType::Plus, .lexeme = "+", .position = { .line = 1, .column = 10 } });
+
+    auto value = std::make_unique<Expressions::BinaryOperator>(std::move(number1), tokenPlus, std::move(number2));
+
+    auto returnStmt = std::make_unique<Statements::Return>(std::move(value));
+
+    expected.push_back(std::move(returnStmt));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }

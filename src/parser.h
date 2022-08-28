@@ -11,6 +11,7 @@
 #include "fmt/ranges.h"
 #include "token.h"
 #include "error.h"
+#include "datatype.h"
 
 /// @todo ugly hacky stuff, try to fix this pls
 namespace Expressions {
@@ -18,7 +19,6 @@ namespace Expressions {
     struct Expression {
         virtual ~Expression() = default;
         virtual void accept(ExpressionVisitor& visitor) = 0;
-        
         virtual std::string to_string() = 0;
         // @todo datatype
     };
@@ -32,6 +32,7 @@ namespace Statements {
     struct ExpressionStatement;
     struct Print;
     struct Function;
+    struct Return;
     //struct Assignment;
 
     struct StatementVisitor {
@@ -39,6 +40,7 @@ namespace Statements {
         virtual void visit(ExpressionStatement& statement) = 0;
         virtual void visit(Print& statement) = 0;
         virtual void visit(Function& statement) = 0;
+        virtual void visit(Return& statement) = 0;
         //virtual void visit(Assignment& statement) = 0;
 
         virtual ~StatementVisitor() = default;
@@ -58,18 +60,24 @@ namespace Statements {
     };
 
     struct VariableDefinition : public StatementAcceptor<VariableDefinition> {
-        VariableDefinition(std::string_view name, std::unique_ptr<Expression> initializer)
+        VariableDefinition(std::string_view name, std::unique_ptr<Expression> initializer, DataType data_type = {})
             : name(name)
             , initializer(std::move(initializer))
+            , data_type(std::move(data_type))
         {
+        }
+
+
+        std::string to_string() final {
+            return fmt::format("VariableDefinition: .name {{ {} }}, .initializer {{ {} }}, .dt {{ {} }}", 
+                               name,
+                               initializer ? initializer->to_string() : "nullptr",
+                               data_type.to_string());
         }
 
         std::string name;
         std::unique_ptr<Expression> initializer;
-
-        std::string to_string() final {
-            return fmt::format("VariableDefinition: .name = {{ {} }}, .initializer {{ {} }}", name, initializer ? initializer->to_string() : "nullptr");
-        }
+        DataType data_type;
     };
 
     struct ExpressionStatement : public StatementAcceptor<ExpressionStatement> {
@@ -97,7 +105,7 @@ namespace Statements {
             , params(std::move(params))
             , body(std::move(body))
         {
-            stack_size = params.size() * 4; // @todo for now assume that every datatype use 4 bytes and don't care about local variables
+            //stack_size = params.size() * 4; // @todo for now assume that every datatype use 4 bytes and don't care about local variables
         }
 
         std::string to_string() final {
@@ -116,6 +124,19 @@ namespace Statements {
         std::vector<Token> params;
         std::vector<std::unique_ptr<Statement>> body;
         std::size_t stack_size { 0 };
+    };
+
+    struct Return : public StatementAcceptor<Return> {
+        Return(std::unique_ptr<Expression> value)
+            : value(std::move(value))
+        {
+        }
+
+        std::string to_string() final {
+            return fmt::format("Return: .value {{ {} }}", value ? value->to_string() : "nullptr");
+        }
+
+        std::unique_ptr<Expression> value;
     };
 
 } // namespace Statements
@@ -232,7 +253,7 @@ public:
     using UniqExpression = std::unique_ptr<Expression>;
 
 public:
-    Parser() = default;
+    Parser();
 
     StatementList parse(const TokenList& tokens);
 
@@ -255,6 +276,7 @@ public:
     [[nodiscard]] auto declaration() -> Result<UniqStatement>;
     [[nodiscard]] auto varDeclaration() -> Result<UniqStatement>;
     [[nodiscard]] auto statement() -> Result<UniqStatement>;
+    [[nodiscard]] auto returnStatement() -> Result<UniqStatement>;
     [[nodiscard]] auto expressionStatement() -> Result<UniqStatement>;
     [[nodiscard]] auto printStatement() -> Result<UniqStatement>;
     [[nodiscard]] auto function() -> Result<UniqStatement>;
@@ -270,6 +292,7 @@ public:
     [[nodiscard]] auto primary() -> Result<UniqExpression>;
 
 private:
+    std::vector<DataType> m_dataTypes;
     TokenList m_tokens;
     std::size_t m_current { 0 };
     bool m_hasError { false };

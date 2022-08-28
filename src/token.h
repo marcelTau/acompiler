@@ -42,7 +42,6 @@ static constexpr const char *const TokenTypeNames[] = {
     "Then",
     "Do",
     "End",
-    "Int",
     "Hashtag",
     "Error",
     "Eof",
@@ -91,7 +90,6 @@ enum class TokenType : std::uint8_t {
     Then,
     Do,
     End,
-    Int,
 
     Hashtag,
     Error,

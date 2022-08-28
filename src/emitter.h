@@ -76,6 +76,7 @@ private:
     void visit(VariableDefinition& statement) override {}
     void visit(ExpressionStatement& statement) override {}
     void visit(Print& statement)override {}
+    void visit(Return& statement)override {}
     void visit(Function& statement) override {
         emit_line(fmt::format("{}:", statement.name.lexeme), "User defined function");
         emit_line("  push rbp");
