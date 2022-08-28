@@ -20,6 +20,8 @@ namespace Expressions {
         virtual ~Expression() = default;
         virtual void accept(ExpressionVisitor& visitor) = 0;
         virtual std::string to_string() = 0;
+
+        DataType datatype {};
         // @todo datatype
     };
 } // namespace Expression
@@ -174,7 +176,8 @@ namespace Expressions {
             : lhs(std::move(lhs))
             , operator_type(operator_type)
             , rhs(std::move(rhs))
-        {}
+        {
+        }
 
         std::string to_string() final {
             return fmt::format("BinaryOperator: .lhs {{ {} }}, .operator {{ {} }}, .rhs {{ {} }}", lhs->to_string(), operator_type, rhs->to_string());
@@ -192,6 +195,7 @@ namespace Expressions {
             if (result.ec == std::errc::invalid_argument) {
                 assert(false && "TODO NUMBER");
             }
+            datatype = availableDataTypes.at("Int");
         }
 
         std::string to_string() final {
@@ -205,6 +209,7 @@ namespace Expressions {
         Bool(std::string_view sv)
         {
             value = (sv == "true");
+            datatype = availableDataTypes.at("Bool");
         }
 
         std::string to_string() final {
@@ -253,7 +258,7 @@ public:
     using UniqExpression = std::unique_ptr<Expression>;
 
 public:
-    Parser();
+    Parser() = default;
 
     StatementList parse(const TokenList& tokens);
 
@@ -292,7 +297,6 @@ public:
     [[nodiscard]] auto primary() -> Result<UniqExpression>;
 
 private:
-    std::vector<DataType> m_dataTypes;
     TokenList m_tokens;
     std::size_t m_current { 0 };
     bool m_hasError { false };

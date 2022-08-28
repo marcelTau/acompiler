@@ -67,16 +67,29 @@ TEST(parser, variable_assignment) {
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
-TEST(parser, variable_assignment_with_type_annotation) {
+TEST(parser, variable_assignment_with_type_annotation_int) {
     Scanner s;
     Parser p;
     auto tokens = s.scan("let a: Int = 10;");
     auto stmts = p.parse(tokens);
 
     Parser::StatementList expected;
-    DataType dt { .name = "Int", .size = 4 };
+    auto dt = availableDataTypes.at("Int");
     auto number = std::make_unique<Expressions::Number>("10");
     expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number), dt));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, variable_assignment_with_type_annotation_bool) {
+    Scanner s;
+    Parser p;
+    auto tokens = s.scan("let a: Bool = true;");
+    auto stmts = p.parse(tokens);
+
+    Parser::StatementList expected;
+    auto dt = availableDataTypes.at("Bool");
+    auto boolExpr = std::make_unique<Expressions::Bool>("true");
+    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(boolExpr), dt));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 

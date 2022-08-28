@@ -26,7 +26,7 @@ int main(int ac, char **av) {
     std::string content;
 
     while (std::getline(file, line)) {
-        content += line;
+        content += line + '\n';
     }
 
     auto tokens = s.scan(content);

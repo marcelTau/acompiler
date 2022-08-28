@@ -1,11 +1,6 @@
 #include "parser.h"
 #include "fmt/ranges.h"
 
-Parser::Parser() {
-    m_dataTypes.push_back({ .name = "Uninitialized", .size = 0 });
-    m_dataTypes.push_back({ .name = "Int", .size = 4 });
-}
-
 Parser::StatementList Parser::parse(const TokenList& tokens) {
     StatementList statements;
 
@@ -202,17 +197,13 @@ auto Parser::varDeclaration() -> Result<UniqStatement> {
             return datatype_token.get_err();
         }
 
-        // @todo refactor this to use a hash map 
-        for (const auto& dt : m_dataTypes) {
-            if (dt.name == datatype_token.unwrap().lexeme) {
-                datatype = dt;
-                break;
-            }
-        }
+        const auto datatype_name = datatype_token.unwrap().lexeme;
 
-        if (datatype.name == "Uninitialized") {
+        try {
+            datatype = availableDataTypes.at(datatype_name);
+        } catch (std::out_of_range& e) {
             return Result<UniqStatement>::ParseError(datatype_token.unwrap(), 
-                    fmt::format("Expect datatype after ':' found {}", datatype_token.unwrap().lexeme));
+                    fmt::format("Expect datatype after ':' found {}", datatype_name));
         }
     }
 
