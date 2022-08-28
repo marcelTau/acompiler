@@ -3,27 +3,7 @@
 #include "parser.h"
 #include <fstream>
 #include <sstream>
-
-
-/*
-Default asm source code layout:
-    
-%include "defines.inc"      ; all syscalls defined etc.
-
-
-section .text
-global _start
-
-_start:
-    push rbp                ; store old rbp on stack
-    mov rbp, rsp            ; store rsp in rbp to use it as base pointer of stackframe
-
-    ;; call main            ; here we would call main. This function has to be defined in the sourcecode. Otherwise it will not work.
-
-    mov rax, 60             ; exit with 0
-    mov rdi, 0
-    syscall
-*/
+#include <bitset>
 
 namespace Emitter {
 
@@ -34,6 +14,46 @@ using Expressions::Expression;
 using Statements::Statement;
 using StatementList = std::vector<std::unique_ptr<Statement>>;
 
+enum Register {
+    RAX,
+    RBX,
+    RCX,
+    RDX,
+    RSP,
+    RBP,
+    RSI,
+    RDI,
+    R8,
+    R9,
+    R10,
+    R11,
+    R12,
+    R13,
+    R14,
+    R15,
+    MAX_COUNT,
+};
+
+static constexpr std::array registerNames {
+    "rax",
+    "rbx",
+    "rcx",
+    "rdx",
+    "rsp",
+    "rbp",
+    "rsi",
+    "rdi",
+    "r8",
+    "r9",
+    "r10",
+    "r11",
+    "r12",
+    "r13",
+    "r14",
+    "r15",
+    "MAX_COUNT",
+};
+
 struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVisitor {
 
     Emitter() = default;
@@ -41,7 +61,7 @@ struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVis
     void emit(const StatementList& statements) {
         emit_line("", "=== Auto-generated code ===");
 
-        emit_line("%include \"defines.inc\"", "bring syscall defines into scope");
+        emit_line("%include \"asm/defines.inc\"", "bring syscall defines into scope");
         emit_line("section .text", "begin source code segment");
         emit_line("global _start", "make entrypoint function visible to linker");
 
@@ -52,7 +72,7 @@ struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVis
         emit_line("  call main", "user defined main function\n");
 
         emit_line("  mov rdi, rax", "set exit code to what main put in rax");
-        emit_line("  mov rax, 60", "prepare to exit with code 0");
+        emit_line("  mov rax, SYS_EXIT", "prepare to exit with code 0");
         emit_line("  syscall", "call exit");
 
         for (const auto &statement : statements) {
@@ -78,11 +98,15 @@ private:
     void visit(VariableDefinition& statement) override {}
     void visit(ExpressionStatement& statement) override {}
     void visit(Print& statement)override {}
-    void visit(Return& statement)override {
+
+    void visit(Return& statement) override {
         statement.value->accept(*this);
+        emit_line("  pop rax", "pop result of binary expression into rax");
     }
+
     void visit(Function& statement) override {
-        emit_line(fmt::format("{}:", statement.name.lexeme), "User defined function");
+        // @todo pretty print the params of the function as comment above
+        emit_line(fmt::format("\n{}:", statement.name.lexeme), "User defined function");
         emit_line("  push rbp", "save rbp since it is callee saved");
         emit_line("  mov rbp, rsp", "setup rbp to use it as the base pointer");
         emit_line(fmt::format("  sub rsp, {}", statement.stack_size), fmt::format("reserve {} bytes on the stack", statement.stack_size));
@@ -98,22 +122,56 @@ private:
 
     void visit(Assignment& expression) override {}
     void visit(BinaryOperator& expression) override {
-        auto num1 = static_cast<Expressions::Number *>(expression.lhs.get())->value;
-        auto num2 = static_cast<Expressions::Number *>(expression.rhs.get())->value;
+        std::size_t firstIdx, secondIdx;
+        std::string_view op;
 
-        auto op = expression.operator_type.type == TokenType::Plus ? "add" : "";
+        switch (expression.operator_type.type) {
+            case TokenType::Plus: 
+                op = "add";
+                break;
+            default:
+                fmt::print(stderr, "Emitter: {}", expression.operator_type);
+                assert(false && "Emitter: BinaryOperator");
+        };
 
-        emit_line(fmt::format("  mov r10, {}", num1));
-        emit_line(fmt::format("  {} r10, {}", op, num2));
+        firstIdx = getNextFreeRegister();
+        fmt::print(stderr, "Moving lhs into register {}", registerNames[firstIdx]);
+        expression.lhs->accept(*this);
 
-        emit_line("  mov rax, r10");
+        secondIdx = getNextFreeRegister();
+        fmt::print(stderr, "Moving rhs into register {}", registerNames[secondIdx]);
+        expression.rhs->accept(*this);
+
+        // do the binary operation
+        emit_line(fmt::format("  {} {}, {}", op, registerNames[firstIdx], registerNames[secondIdx]));
+
+        // push outcome of binary expression onto stack
+        emit_line(fmt::format("  push {}", registerNames[firstIdx]));
     }
-    void visit(Number& expression)override {}
-    void visit(Bool& expression)override {}
+
+    // loads the value into the next free register r8-r15
+    void visit(Number& expression) override {
+        auto idx = getNextFreeRegister();
+        emit_line(fmt::format("  mov {}, {}", registerNames[idx], expression.value));
+        m_registers.set(idx);
+    }
+
+    void visit(Bool& expression) override {}
     void visit(Variable& expressi) override {}
-    void visit(Unary& expression)override {}
+    void visit(Unary& expression) override {}
 
 private:
+    std::size_t getNextFreeRegister() {
+        for (std::size_t idx = Register::R8; idx <= Register::R15; ++idx) {
+            if (!m_registers.test(idx)) {
+                return idx;
+            }
+        }
+
+        assert(false && "getNextFreeRegister");
+    }
+
+    std::bitset<Register::MAX_COUNT> m_registers {};
     std::stringstream output {};
 };
 
