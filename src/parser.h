@@ -173,14 +173,23 @@ namespace Expressions {
 
     struct BinaryOperator : public ExpressionAcceptor<BinaryOperator> {
         BinaryOperator(std::unique_ptr<Expression> lhs, Token operator_type, std::unique_ptr<Expression> rhs) 
-            : lhs(std::move(lhs))
+            : lhs{std::move(lhs)}
             , operator_type(operator_type)
-            , rhs(std::move(rhs))
+            , rhs{std::move(rhs)}
         {
+            if (this->lhs->datatype != this->rhs->datatype) {
+                assert(false && "BinaryOperator has two different datatypes");
+            }
+
+            datatype = this->lhs->datatype;
         }
 
         std::string to_string() final {
-            return fmt::format("BinaryOperator: .lhs {{ {} }}, .operator {{ {} }}, .rhs {{ {} }}", lhs->to_string(), operator_type, rhs->to_string());
+            return fmt::format("BinaryOperator({}): .lhs {{ {} }}, .operator {{ {} }}, .rhs {{ {} }}", 
+                               datatype.to_string(),
+                               lhs->to_string(), 
+                               operator_type, 
+                               rhs->to_string());
         }
 
         std::unique_ptr<Expression> lhs;
@@ -195,11 +204,15 @@ namespace Expressions {
             if (result.ec == std::errc::invalid_argument) {
                 assert(false && "TODO NUMBER");
             }
-            datatype = availableDataTypes.at("Int");
+            this->datatype = availableDataTypes.at("Int");
+        }
+
+        Number(Number&& other) noexcept {
+            this->datatype = other.datatype;
         }
 
         std::string to_string() final {
-            return fmt::format("NumberExpression: .value {{ {} }}", value);
+            return fmt::format("NumberExpression({}): .value {{ {} }}", datatype.to_string(), value);
         }
 
         int value;
@@ -213,7 +226,7 @@ namespace Expressions {
         }
 
         std::string to_string() final {
-            return fmt::format("BoolExpression: .value {{ {} }}", value ? "true" : "false");
+            return fmt::format("BoolExpression({}): .value {{ {} }}", datatype.to_string(), value ? "true" : "false");
         }
 
         bool value;
@@ -221,10 +234,14 @@ namespace Expressions {
 
     struct Variable : public ExpressionAcceptor<Variable> {
         Variable(std::string_view name)
-            : name(name) {}
+            : name(name)
+        {
+            // @todo add datatype of variable here.
+            // This will probably change when scopes are implemented and we can lookup the variable and get it's type
+        }
 
         std::string to_string() final {
-            return fmt::format("VariableExpression: .name {{ {} }}", name);
+            return fmt::format("VariableExpression({}): .name {{ {} }}", datatype.to_string(), name);
         }
         std::string name;
     };
@@ -234,10 +251,11 @@ namespace Expressions {
             : operator_type(operator_type)
             , rhs(std::move(rhs))
         {
+            datatype = this->rhs->datatype;
         }
 
         std::string to_string() final {
-            return fmt::format("UnaryExpression: .operator {{ {} }}, .rhs {{ {} }}", operator_type, rhs->to_string());
+            return fmt::format("UnaryExpression({}): .operator {{ {} }}, .rhs {{ {} }}", datatype.to_string(), operator_type, rhs->to_string());
         }
 
         Token operator_type;
