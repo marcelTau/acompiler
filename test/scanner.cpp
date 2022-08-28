@@ -4,7 +4,6 @@
 
 template <typename ...Args>
 Scanner::TokenList buildExpectedList(Args&& ...args) {
-    //fmt::print("{}", __PRETTY_FUNCTION__);
     Scanner::TokenList tokens { args... };
     return tokens;
 }
@@ -51,6 +50,27 @@ TEST(scanner, slash_token) {
         Token { .type { TokenType::Slash }, .lexeme { "/" }, .position { 1, 1 }, },
         Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 1 }, }
     );
+    EXPECT_EQ(tokens, expected);
+}
+
+TEST(scanner, minus_token) {
+    Scanner s;
+    auto tokens = s.scan("-");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Minus }, .lexeme { "-" }, .position { 1, 1 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 1 }, }
+    );
+    EXPECT_EQ(tokens, expected);
+}
+
+TEST(scanner, return_arrow) {
+    Scanner s;
+    auto tokens = s.scan("->");
+    Scanner::TokenList expected = buildExpectedList(
+        Token { .type { TokenType::Arrow }, .lexeme { "->" }, .position { 1, 1 }, },
+        Token { .type { TokenType::Eof }, .lexeme { "" }, .position { 1, 1 }, }
+    );
+
     EXPECT_EQ(tokens, expected);
 }
 

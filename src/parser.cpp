@@ -108,13 +108,33 @@ auto Parser::function() -> Result<UniqStatement> {
 
     std::ignore = consume(TokenType::RightParen, "Expect ')' after parameters.");
 
+    std::ignore = consume(TokenType::Arrow, "Expect '->' after function declaration.");
+
+    auto return_datatype_token = consume(TokenType::Identifier, "Expect return value after '->'.");
+
+    if (!return_datatype_token) {
+        return return_datatype_token.get_err();
+    }
+
+    auto return_datatype_name = return_datatype_token.unwrap().lexeme;
+
+    DataType datatype {};
+
+    try {
+        datatype = availableDataTypes.at(return_datatype_name);
+    } catch (std::out_of_range&) {
+        return Result<UniqStatement>::ParseError(return_datatype_token.unwrap(), 
+                                                 fmt::format("Expect datatype after '->' found {}.", 
+                                                 return_datatype_name));
+    }
+
     auto block_stmts = block();
 
     if (!block_stmts) {
         return block_stmts.get_err();
     }
 
-    auto function_stmt = std::make_unique<Statements::Function>(name.unwrap(), params, block_stmts.unwrap());
+    auto function_stmt = std::make_unique<Statements::Function>(name.unwrap(), params, block_stmts.unwrap(), datatype);
     return Result<UniqStatement>(std::move(function_stmt));
 }
 
@@ -203,7 +223,7 @@ auto Parser::varDeclaration() -> Result<UniqStatement> {
             datatype = availableDataTypes.at(datatype_name);
         } catch (std::out_of_range& e) {
             return Result<UniqStatement>::ParseError(datatype_token.unwrap(), 
-                    fmt::format("Expect datatype after ':' found {}", datatype_name));
+                    fmt::format("Expect datatype after ':' found {}.", datatype_name));
         }
     }
 

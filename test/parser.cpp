@@ -378,13 +378,14 @@ TEST(parser, empty_function) {
     Scanner s;
     Parser p;
     Parser::StatementList expected;
-    auto tokens = s.scan("fun foo() end");
+    auto tokens = s.scan("fun foo() -> Int end");
     auto stmts = p.parse(tokens);
 
     auto name = Token({ .type = TokenType::Identifier, .lexeme = "foo", .position = { .line = 1, .column = 7 } });
+    auto returnType = availableDataTypes.at("Int");
     std::vector<Token> params {};
     std::vector<std::unique_ptr<Statements::Statement>> body {};
-    auto funcStmt = std::make_unique<Statements::Function>(name, std::move(params), std::move(body));
+    auto funcStmt = std::make_unique<Statements::Function>(name, std::move(params), std::move(body), returnType);
 
     expected.push_back(std::move(funcStmt));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
@@ -394,17 +395,19 @@ TEST(parser, non_empty_function) {
     Scanner s;
     Parser p;
     Parser::StatementList expected;
-    auto tokens = s.scan("fun foo()\nlet a = 10;\nend");
+    auto tokens = s.scan("fun foo() -> Int\nlet a = 10;\nend");
     auto stmts = p.parse(tokens);
 
     auto name = Token({ .type = TokenType::Identifier, .lexeme = "foo", .position = { .line = 1, .column = 7 } });
     std::vector<Token> params {};
     std::vector<std::unique_ptr<Statements::Statement>> body {};
 
+    auto returnType = availableDataTypes.at("Int");
+
     auto number = std::make_unique<Expressions::Number>("10");
     body.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number)));
 
-    auto funcStmt = std::make_unique<Statements::Function>(name, std::move(params), std::move(body));
+    auto funcStmt = std::make_unique<Statements::Function>(name, std::move(params), std::move(body), returnType);
 
     expected.push_back(std::move(funcStmt));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
@@ -414,8 +417,10 @@ TEST(parser, non_empty_function_with_parameters) {
     Scanner s;
     Parser p;
     Parser::StatementList expected;
-    auto tokens = s.scan("fun foo(param)\nlet a = 10;\nend");
+    auto tokens = s.scan("fun foo(param) -> Int\nlet a = 10;\nend");
     auto stmts = p.parse(tokens);
+
+    auto returnType = availableDataTypes.at("Int");
 
     auto name = Token({ .type = TokenType::Identifier, .lexeme = "foo", .position = { .line = 1, .column = 7 } });
     std::vector<Token> params {};
@@ -428,7 +433,7 @@ TEST(parser, non_empty_function_with_parameters) {
     auto number = std::make_unique<Expressions::Number>("10");
     body.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number)));
 
-    auto funcStmt = std::make_unique<Statements::Function>(name, std::move(params), std::move(body));
+    auto funcStmt = std::make_unique<Statements::Function>(name, std::move(params), std::move(body), returnType);
 
     expected.push_back(std::move(funcStmt));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);

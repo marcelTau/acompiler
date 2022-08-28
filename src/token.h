@@ -8,6 +8,7 @@ static constexpr const char *const TokenTypeNames[] = {
     "LeftParen",
     "RightParen",
     "Colon",
+    "Arrow", // ->
     "Comma",
     "Dot",
     "Minus",
@@ -52,6 +53,7 @@ enum class TokenType : std::uint8_t {
     LeftParen,
     RightParen,
     Colon,
+    Arrow,
     Comma,
     Dot,
     Minus,

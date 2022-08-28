@@ -102,10 +102,11 @@ namespace Statements {
     };
 
     struct Function : public StatementAcceptor<Function> {
-        Function(Token name, std::vector<Token> params, std::vector<std::unique_ptr<Statement>> body)
+        Function(Token name, std::vector<Token> params, std::vector<std::unique_ptr<Statement>> body, DataType return_datatype)
             : name(name)
             , params(std::move(params))
             , body(std::move(body))
+            , return_datatype(std::move(return_datatype))
         {
             //stack_size = params.size() * 4; // @todo for now assume that every datatype use 4 bytes and don't care about local variables
         }
@@ -118,14 +119,15 @@ namespace Statements {
             }
 
             return fmt::format(
-                "FunctionStatement: .name {{ {} }}, .params {{ {} }}, .body {{ {} }}",
-                name, fmt::join(params, ", "), ss.str());
+                "FunctionStatement({}): .name {{ {} }}, .params {{ {} }}, .body {{ {} }}",
+                return_datatype.to_string(), name, fmt::join(params, ", "), ss.str());
         }
 
         Token name;
         std::vector<Token> params;
         std::vector<std::unique_ptr<Statement>> body;
         std::size_t stack_size { 0 };
+        DataType return_datatype;
     };
 
     struct Return : public StatementAcceptor<Return> {

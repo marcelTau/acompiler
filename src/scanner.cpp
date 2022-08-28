@@ -43,11 +43,12 @@ void Scanner::nextToken() {
         SINGLE_TOKEN(':', Colon);
         SINGLE_TOKEN(',', Comma);
         SINGLE_TOKEN('.', Dot);
-        SINGLE_TOKEN('-', Minus);
+        //SINGLE_TOKEN('-', Minus);
         SINGLE_TOKEN('+', Plus);
         SINGLE_TOKEN(';', Semicolon);
         SINGLE_TOKEN('*', Star);
         SINGLE_TOKEN('/', Slash);
+        NESTED_TOKEN('-', '>', Arrow, Minus);
         NESTED_TOKEN('!', '=', BangEqual, Bang);
         NESTED_TOKEN('=', '=', EqualEqual, Equal);
         NESTED_TOKEN('<', '=', LessEqual, Less);
