@@ -22,17 +22,8 @@ set(SOURCES
 
 # Include 3rd party libraries
 include(FetchContent)
-FetchContent_Declare(
-  fmt
-  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-  GIT_TAG        92d36e82c437f33562bb32096378746c69d96aac
-)
-
-FetchContent_Declare(
-   googletest
-   GIT_REPOSITORY https://github.com/google/googletest.git
-   GIT_TAG 58d77fa8070e8cec2dc1ed015d66b454c8d78850
-)
+FetchContent_Declare(fmt GIT_REPOSITORY https://github.com/fmtlib/fmt.git GIT_TAG 92d36e82c437f33562bb32096378746c69d96aac)
+FetchContent_Declare(googletest GIT_REPOSITORY https://github.com/google/googletest.git GIT_TAG 58d77fa8070e8cec2dc1ed015d66b454c8d78850)
 
 FetchContent_MakeAvailable(googletest fmt)
 

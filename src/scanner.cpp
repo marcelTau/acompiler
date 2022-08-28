@@ -1,3 +1,4 @@
+#include "spdlog/spdlog.h"
 #include "scanner.h"
 #include <tuple>
 
@@ -5,17 +6,21 @@ Scanner::TokenList Scanner::scan(const std::string_view source) {
     m_source = source;
     TokenList tokens;
 
+    spdlog::info("Start scanning ...");
+
     while (m_current < m_source.size()) {
         m_start = m_current;
         
         try {
             nextToken();
         } catch (const ScannerError& e) {
-            fmt::print(stderr, "{}\n", e.what());
-            //std::exit(EXIT_FAILURE);
+            fmt::print(stderr, "{}\n", e.what()); // @fixme important for error tests atm
+            spdlog::error(fmt::format("ScannerError: {}\n", e.what()));
         }
     }
     addToken(TokenType::Eof);
+
+    spdlog::info("Finished scanning.");
     return m_tokens;
 }
 

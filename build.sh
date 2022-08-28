@@ -13,6 +13,6 @@ cat ./testoutput.asm
 nasm -felf64 testoutput.asm && ld testoutput.o -o testoutput && ./testoutput
 echo "return value: $?"
 
-#cd build 
-#ctest --output-on-failure -j 4
-#cd ..
+# cd build 
+# ctest --output-on-failure -j 4
+# cd ..

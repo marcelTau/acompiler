@@ -5,8 +5,10 @@
 #include "scanner.h"
 #include "printer.h"
 #include "emitter.h"
+#include "spdlog/spdlog.h"
 
 int main(int ac, char **av) {
+    spdlog::info("Compiler started");
     Scanner s;
     Parser p;
     Emitter::Emitter e;
@@ -18,13 +20,15 @@ int main(int ac, char **av) {
 
     std::ifstream file(av[1]);
 
-    if (! file.is_open()) {
+    if (!file.is_open()) {
+        spdlog::error(fmt::format("Cannot open file '{}'", av[1]));
         return 1;
     }
 
     std::string line;
     std::string content;
 
+    spdlog::info(fmt::format("Start reading file '{}'", av[1]));
     while (std::getline(file, line)) {
         content += line + '\n';
     }
@@ -33,7 +37,7 @@ int main(int ac, char **av) {
     auto statements = p.parse(tokens);
 
     for (const auto& statement : statements) {
-        fmt::print("Statement: {}\n", statement->to_string());
+        fmt::print("{}\n", statement->to_string());
     }
 
     e.emit(statements);

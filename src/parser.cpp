@@ -1,21 +1,26 @@
 #include "parser.h"
 #include "fmt/ranges.h"
+#include "spdlog/spdlog.h"
 
 Parser::StatementList Parser::parse(const TokenList& tokens) {
     StatementList statements;
 
     m_tokens = tokens;
 
+    spdlog::info(fmt::format("Start parsing with {} tokens", m_tokens.size()));
+
     while (! isAtEnd()) {
         auto decl = declaration();
 
         if (!decl) {
+            spdlog::error(fmt::format("ParserError: {}", decl.get_err().msg));
             return statements;
         }
 
         statements.push_back(decl.unwrap());
     }
 
+    spdlog::info(fmt::format("Finished parsing with {} statements", statements.size()));
     return statements;
 }
 

@@ -19,7 +19,7 @@ namespace Expressions {
     struct Expression {
         virtual ~Expression() = default;
         virtual void accept(ExpressionVisitor& visitor) = 0;
-        virtual std::string to_string() = 0;
+        virtual std::string to_string(std::size_t offset = 0) = 0;
 
         DataType datatype {};
         // @todo datatype
@@ -51,7 +51,7 @@ namespace Statements {
     struct Statement {
         virtual ~Statement() = default;
         virtual void accept(StatementVisitor& visitor) = 0;
-        virtual std::string to_string() = 0;
+        virtual std::string to_string(std::size_t offset = 0) = 0;
     };
 
     template<typename T>
@@ -65,25 +65,37 @@ namespace Statements {
         VariableDefinition(std::string_view name, std::unique_ptr<Expression> initializer, DataType data_type = {})
             : name(name)
             , initializer(std::move(initializer))
-            , data_type(std::move(data_type))
+            , datatype(std::move(data_type))
         {
         }
 
+        std::string to_string(std::size_t offset = 0) final {
+            //return fmt::format("VariableDefinition: .name {{ {} }}, .initializer {{ {} }}, .dt {{ {} }}", 
+                               //name,
+                               //initializer ? initializer->to_string() : "nullptr",
+                               //data_type.to_string());
 
-        std::string to_string() final {
-            return fmt::format("VariableDefinition: .name {{ {} }}, .initializer {{ {} }}, .dt {{ {} }}", 
-                               name,
-                               initializer ? initializer->to_string() : "nullptr",
-                               data_type.to_string());
+            return fmt::format(
+                    "{0:>{w}}VariableDefinition:\n"
+                    "{0:>{w}}  .name = {2}\n"
+                    "{0:>{w}}  .initializer = {3}\n"
+                    "{0:>{w}}  .datatype = {4}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    name,
+                    initializer ? initializer->to_string() : "nullptr",
+                    datatype.to_string()
+            );
+
         }
 
         std::string name;
         std::unique_ptr<Expression> initializer;
-        DataType data_type;
+        DataType datatype;
     };
 
     struct ExpressionStatement : public StatementAcceptor<ExpressionStatement> {
-        std::string to_string() final {
+        std::string to_string(std::size_t offset = 0) final {
             return "ExpressionStatement";
         }
     };
@@ -94,7 +106,7 @@ namespace Statements {
         {
         }
 
-        std::string to_string() final {
+        std::string to_string(std::size_t offset = 0) final {
             return fmt::format("PrintStatement: .expression {{ {} }}", expression->to_string());
         }
 
@@ -111,16 +123,31 @@ namespace Statements {
             //stack_size = params.size() * 4; // @todo for now assume that every datatype use 4 bytes and don't care about local variables
         }
 
-        std::string to_string() final {
+        std::string to_string(std::size_t offset = 0) final {
             std::stringstream ss{};
 
             for (const auto& statement : body) {
-                ss << " { " << statement->to_string() << " }, ";
+                ss << statement->to_string(offset + 4) << '\n' ;
             }
 
+            //return fmt::format(
+                //"FunctionStatement({}): .name {{ {} }}, .params {{ {} }}, .body {{ {} }}",
+                //return_datatype.to_string(), name, fmt::join(params, ", "), ss.str());
+
+
             return fmt::format(
-                "FunctionStatement({}): .name {{ {} }}, .params {{ {} }}, .body {{ {} }}",
-                return_datatype.to_string(), name, fmt::join(params, ", "), ss.str());
+                    "{0:>{w}}FunctionStatement:\n"
+                    "{0:>{w}}  .returntype = {2}\n"
+                    "{0:>{w}}  .name = {3}\n"
+                    "{0:>{w}}  .params = {4}\n"
+                    "{0:>{w}}  .body = \n{5}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    return_datatype.to_string(),
+                    name,
+                    fmt::join(params, ", "),
+                    ss.str()
+            );
         }
 
         Token name;
@@ -136,8 +163,15 @@ namespace Statements {
         {
         }
 
-        std::string to_string() final {
-            return fmt::format("Return: .value {{ {} }}", value ? value->to_string() : "nullptr");
+        std::string to_string(std::size_t offset = 0) final {
+            //return fmt::format("Return: .value {{ {} }}", value ? value->to_string() : "nullptr");
+            return fmt::format(
+                    "{0:>{w}}Return:\n"
+                    "{0:>{w}}  .value =\n{2}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    value ? value->to_string(offset + 4) : "nullptr"
+            );
         }
 
         std::unique_ptr<Expression> value;
@@ -186,12 +220,25 @@ namespace Expressions {
             datatype = this->lhs->datatype;
         }
 
-        std::string to_string() final {
-            return fmt::format("BinaryOperator({}): .lhs {{ {} }}, .operator {{ {} }}, .rhs {{ {} }}", 
-                               datatype.to_string(),
-                               lhs->to_string(), 
-                               operator_type, 
-                               rhs->to_string());
+        std::string to_string(std::size_t offset = 0) final {
+            //return fmt::format("BinaryOperator({}): .lhs {{ {} }}, .operator {{ {} }}, .rhs {{ {} }}", 
+                               //datatype.to_string(),
+                               //lhs->to_string(), 
+                               //operator_type, 
+                               //rhs->to_string());
+            return fmt::format(
+                    "{0:>{w}}BinaryOperator:\n"
+                    "{0:>{w}}  .datatype = {2}\n"
+                    "{0:>{w}}  .lhs =\n{3}\n"
+                    "{0:>{w}}  .operator = {4}\n"
+                    "{0:>{w}}  .rhs =\n{5}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    datatype.to_string(),
+                    lhs->to_string(offset + 4), 
+                    operator_type, 
+                    rhs->to_string(offset + 4)
+            );
         }
 
         std::unique_ptr<Expression> lhs;
@@ -213,8 +260,17 @@ namespace Expressions {
             this->datatype = other.datatype;
         }
 
-        std::string to_string() final {
-            return fmt::format("NumberExpression({}): .value {{ {} }}", datatype.to_string(), value);
+        std::string to_string(std::size_t offset = 0) final {
+            //return fmt::format("NumberExpression({}): .value {{ {} }}", datatype.to_string(), value);
+            return fmt::format(
+                    "{0:>{w}}NumberExpression:\n"
+                    "{0:>{w}}  .datatype = {2}\n"
+                    "{0:>{w}}  .value = {3}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    datatype.to_string(),
+                    value
+            );
         }
 
         int value;
@@ -227,8 +283,17 @@ namespace Expressions {
             datatype = availableDataTypes.at("Bool");
         }
 
-        std::string to_string() final {
-            return fmt::format("BoolExpression({}): .value {{ {} }}", datatype.to_string(), value ? "true" : "false");
+        std::string to_string(std::size_t offset = 0) final {
+            //return fmt::format("BoolExpression({}): .value {{ {} }}", datatype.to_string(), value ? "true" : "false");
+            return fmt::format(
+                    "{0:>{w}}BoolExpression:\n"
+                    "{0:>{w}}  .datatype = {2}\n"
+                    "{0:>{w}}  .value = {3}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    datatype.to_string(),
+                    value ? "true" : "false"
+            );
         }
 
         bool value;
@@ -242,8 +307,17 @@ namespace Expressions {
             // This will probably change when scopes are implemented and we can lookup the variable and get it's type
         }
 
-        std::string to_string() final {
-            return fmt::format("VariableExpression({}): .name {{ {} }}", datatype.to_string(), name);
+        std::string to_string(std::size_t offset = 0) final {
+            //return fmt::format("VariableExpression({}): .name {{ {} }}", datatype.to_string(), name);
+            return fmt::format(
+                    "{0:>{w}}VariableExpression:\n"
+                    "{0:>{w}}  .name = {2}\n"
+                    "{0:>{w}}  .datatype = {3}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    name,
+                    datatype.to_string()
+            );
         }
         std::string name;
     };
@@ -256,8 +330,17 @@ namespace Expressions {
             datatype = this->rhs->datatype;
         }
 
-        std::string to_string() final {
-            return fmt::format("UnaryExpression({}): .operator {{ {} }}, .rhs {{ {} }}", datatype.to_string(), operator_type, rhs->to_string());
+        std::string to_string(std::size_t offset = 0) final {
+            //return fmt::format("UnaryExpression({}): .operator {{ {} }}, .rhs {{ {} }}", datatype.to_string(), operator_type, rhs->to_string());
+            return fmt::format(
+                    "{0:>{w}}UnaryExpression:\n"
+                    "{0:>{w}}  .operator = {2}\n"
+                    "{0:>{w}}  .rhs = {3}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    datatype.to_string(),
+                    rhs->to_string(offset + 4)
+            );
         }
 
         Token operator_type;

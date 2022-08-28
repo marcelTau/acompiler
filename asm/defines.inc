@@ -2,4 +2,5 @@
 %define STDOUT 1
 %define STDERR 2
 
+%define SYS_WRITE 1
 %define SYS_EXIT 60
