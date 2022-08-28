@@ -129,6 +129,9 @@ private:
             case TokenType::Plus: 
                 op = "add";
                 break;
+            case TokenType::Minus: 
+                op = "sub";
+                break;
             default:
                 fmt::print(stderr, "Emitter: {}", expression.operator_type);
                 assert(false && "Emitter: BinaryOperator");

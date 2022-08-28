@@ -265,7 +265,7 @@ namespace Expressions {
             return fmt::format(
                     "{0:>{w}}NumberExpression:\n"
                     "{0:>{w}}  .datatype = {2}\n"
-                    "{0:>{w}}  .value = {3}\n",
+                    "{0:>{w}}  .value = {3}",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
                     datatype.to_string(),
