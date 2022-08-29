@@ -6,41 +6,47 @@
 #include "printer.h"
 #include "emitter.h"
 #include "spdlog/spdlog.h"
+#include "resolver.h"
+#include "compiler.h"
 
 int main(int ac, char **av) {
-    spdlog::info("Compiler started");
-    Scanner s;
-    Parser p;
-    Emitter::Emitter e("testoutput.asm");
+    Compiler c;
+    return c.run(ac, av);
 
-    if (ac == 1) {
-        fmt::print(stderr, "No file provided\n");
-        return 1;
-    }
 
-    std::ifstream file(av[1]);
+    //spdlog::info("Compiler started");
+    //Scanner s;
+    //Parser p;
+    //Emitter::Emitter e("testoutput.asm");
 
-    if (!file.is_open()) {
-        spdlog::error(fmt::format("Cannot open file '{}'", av[1]));
-        return 1;
-    }
+    //if (ac == 1) {
+        //fmt::print(stderr, "No file provided\n");
+        //return 1;
+    //}
 
-    std::string line;
-    std::string content;
+    //std::ifstream file(av[1]);
 
-    spdlog::info(fmt::format("Start reading file '{}'", av[1]));
-    while (std::getline(file, line)) {
-        content += line + '\n';
-    }
+    //if (!file.is_open()) {
+        //spdlog::error(fmt::format("Cannot open file '{}'", av[1]));
+        //return 1;
+    //}
 
-    auto tokens = s.scan(content);
-    auto statements = p.parse(tokens);
+    //std::string line;
+    //std::string content;
 
-    for (const auto& statement : statements) {
-        fmt::print("{}\n", statement->to_string());
-    }
+    //spdlog::info(fmt::format("Start reading file '{}'", av[1]));
+    //while (std::getline(file, line)) {
+        //content += line + '\n';
+    //}
 
-    e.emit(statements);
+    //auto tokens = s.scan(content);
+    //auto statements = p.parse(tokens);
 
-    return 0;
+    //for (const auto& statement : statements) {
+        //fmt::print("{}\n", statement->to_string());
+    //}
+
+    //e.emit(statements);
+
+    //return 0;
 }

@@ -78,12 +78,12 @@ namespace Statements {
             return fmt::format(
                     "{0:>{w}}VariableDefinition:\n"
                     "{0:>{w}}  .name = {2}\n"
-                    "{0:>{w}}  .initializer = {3}\n"
+                    "{0:>{w}}  .initializer =\n{3}\n"
                     "{0:>{w}}  .datatype = {4}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
                     name,
-                    initializer ? initializer->to_string() : "nullptr",
+                    initializer ? initializer->to_string(offset + 4) : "nullptr",
                     datatype.to_string()
             );
 
@@ -127,7 +127,7 @@ namespace Statements {
             std::stringstream ss{};
 
             for (const auto& statement : body) {
-                ss << statement->to_string(offset + 4) << '\n' ;
+                ss << statement->to_string(offset + 4);
             }
 
             //return fmt::format(
