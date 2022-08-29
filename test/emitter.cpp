@@ -110,3 +110,20 @@ end
     e.emit(p.parse(s.scan(code)));
     EXPECT_EQ(run_file(filepath), "10");
 }
+
+TEST(emitter, return_division) {
+    std::string filepath = "/tmp/return_division";
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Emitter::Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    return 15 / 5;
+end
+)";
+
+    e.emit(p.parse(s.scan(code)));
+    EXPECT_EQ(run_file(filepath), "3");
+}

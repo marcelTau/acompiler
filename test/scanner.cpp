@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "scanner.h"
 #include <concepts>
+#include <spdlog/spdlog.h>
 
 template <typename ...Args>
 Scanner::TokenList buildExpectedList(Args&& ...args) {
@@ -34,6 +35,7 @@ auto fmt::formatter<Scanner::TokenList>::format(const Scanner::TokenList& tl, Fo
 
 
 TEST(scanner, first_token) {
+    spdlog::set_level(spdlog::level::off);
     Scanner s;
     auto tokens = s.scan("(");
     Scanner::TokenList expected = buildExpectedList(

@@ -87,7 +87,7 @@ struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVis
         file << output.str();
         file.close();
 
-        fmt::print("Emitter done\n");
+        spdlog::info("Emitter done");
     }
 
 private:
