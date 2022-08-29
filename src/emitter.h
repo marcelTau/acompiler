@@ -2,6 +2,7 @@
 
 #include "parser.h"
 #include <fstream>
+#include <spdlog/spdlog.h>
 #include <sstream>
 #include <bitset>
 
@@ -106,7 +107,8 @@ private:
 
     void visit(Function& statement) override {
         // @todo pretty print the params of the function as comment above
-        emit_line(fmt::format("\n{}:", statement.name.lexeme), "User defined function");
+        emit_line("");
+        emit_line(fmt::format("{}:", statement.name.lexeme), "User defined function");
         emit_line("  push rbp", "save rbp since it is callee saved");
         emit_line("  mov rbp, rsp", "setup rbp to use it as the base pointer");
         emit_line(fmt::format("  sub rsp, {}", statement.stack_size), fmt::format("reserve {} bytes on the stack", statement.stack_size));
@@ -122,41 +124,99 @@ private:
 
     void visit(Assignment& expression) override {}
     void visit(BinaryOperator& expression) override {
-        std::size_t firstIdx, secondIdx;
+        //std::size_t firstIdx, secondIdx;
         std::string_view op;
 
         switch (expression.operator_type.type) {
-            case TokenType::Plus: 
+            case TokenType::Plus: {
                 op = "add";
+
+                // recursivly push lhs on stack
+                expression.lhs->accept(*this);
+
+                // recursivly push rhs on stack
+                expression.rhs->accept(*this);
+
+                auto idx1 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+
+                auto idx2 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx2]), "take second value from stack");
+
+                // do the addition and push result on stack
+                emit_line(fmt::format("  add {}, {}", registerNames[idx1], registerNames[idx2]));
+                emit_line(fmt::format("  push {}", registerNames[idx1]));
+
+                // clear the used registers
+                m_registers.flip(idx1);
+                m_registers.flip(idx2);
                 break;
+            }
             case TokenType::Minus: 
                 op = "sub";
                 break;
+            case TokenType::Star: {
+                op = "mul";
+
+                // recursivly push lhs on stack
+                expression.lhs->accept(*this);
+
+                // recursivly push rhs on stack
+                expression.rhs->accept(*this);
+
+                auto idx1 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+
+                emit_line(fmt::format("  pop rax"), "take second value from stack");
+
+                emit_line(fmt::format("  mul {}", registerNames[idx1]));
+                emit_line(fmt::format("  push rax"));
+
+                // clear the used registers
+                m_registers.flip(idx1);
+
+                break;
+            }
             default:
                 fmt::print(stderr, "Emitter: {}", expression.operator_type);
                 assert(false && "Emitter: BinaryOperator");
         };
 
-        firstIdx = getNextFreeRegister();
-        fmt::print(stderr, "Moving lhs into register {}", registerNames[firstIdx]);
-        expression.lhs->accept(*this);
+        //if (op == "mul") {
+            //firstIdx = getNextFreeRegister();
+            //spdlog::info("Moving lhs into register {}", registerNames[firstIdx]);
+            //expression.lhs->accept(*this);
 
-        secondIdx = getNextFreeRegister();
-        fmt::print(stderr, "Moving rhs into register {}", registerNames[secondIdx]);
-        expression.rhs->accept(*this);
+            //emit_line(fmt::format("  mov rax, {}", registerNames[firstIdx]), "mul multiplies the value in register by rax");
 
-        // do the binary operation
-        emit_line(fmt::format("  {} {}, {}", op, registerNames[firstIdx], registerNames[secondIdx]));
+            //secondIdx = getNextFreeRegister();
+            //spdlog::info("Moving rhs into register {}", registerNames[secondIdx]);
+            //expression.rhs->accept(*this);
 
-        // push outcome of binary expression onto stack
-        emit_line(fmt::format("  push {}", registerNames[firstIdx]));
+            //emit_line(fmt::format("  {} {}", op, registerNames[secondIdx]));
+            //emit_line(fmt::format("  push rax"), "result is already in rax");
+        //} else {
+            //firstIdx = getNextFreeRegister();
+            //spdlog::info("Moving lhs into register {}", registerNames[firstIdx]);
+            //expression.lhs->accept(*this);
+
+            //secondIdx = getNextFreeRegister();
+            //spdlog::info("Moving rhs into register {}", registerNames[secondIdx]);
+            //expression.rhs->accept(*this);
+
+            //emit_line(fmt::format("  {} {}, {}", op, registerNames[firstIdx], registerNames[secondIdx]));
+            //emit_line(fmt::format("  push {}", registerNames[firstIdx]));
+        //}
     }
 
     // loads the value into the next free register r8-r15
     void visit(Number& expression) override {
-        auto idx = getNextFreeRegister();
-        emit_line(fmt::format("  mov {}, {}", registerNames[idx], expression.value));
-        m_registers.set(idx);
+        //auto idx = getNextFreeRegister();
+        //emit_line(fmt::format("  mov {}, {}", registerNames[idx], expression.value));
+        
+        emit_line(fmt::format("  push {}", expression.value), "push value on stack");
+
+        //m_registers.set(idx);
     }
 
     void visit(Bool& expression) override {}
@@ -167,6 +227,7 @@ private:
     std::size_t getNextFreeRegister() {
         for (std::size_t idx = Register::R8; idx <= Register::R15; ++idx) {
             if (!m_registers.test(idx)) {
+                m_registers.set(idx);
                 return idx;
             }
         }
