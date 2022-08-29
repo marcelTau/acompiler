@@ -329,7 +329,7 @@ auto Parser::primary() -> Result<UniqExpression> {
     }
 
     if (checkAndAdvance(TokenType::Identifier)) {
-        auto variable_expression = std::make_unique<Expressions::Variable>(previous().lexeme);
+        auto variable_expression = std::make_unique<Expressions::Variable>(previous());
         return Result<UniqExpression>(std::move(variable_expression));
     }
 

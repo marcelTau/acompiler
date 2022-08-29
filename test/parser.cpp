@@ -343,12 +343,13 @@ TEST(parser, variable_assignment_with_variable_identifier) {
 
     Parser::StatementList expected;
     auto number = std::make_unique<Expressions::Number>("10");
-    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
-    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(number)));
+    Token nameA { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(nameA, std::move(number)));
 
-    name = { .type = TokenType::Identifier, .lexeme = "b", .position = { .line = 1, .column = 17 }, };
-    auto var = std::make_unique<Expressions::Variable>("a");
-    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(var)));
+    Token nameB = { .type = TokenType::Identifier, .lexeme = "b", .position = { .line = 1, .column = 17 } };
+    Token variable = { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 21 } };
+    auto var = std::make_unique<Expressions::Variable>(variable);
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(nameB, std::move(var)));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 

@@ -300,7 +300,7 @@ namespace Expressions {
     };
 
     struct Variable : public ExpressionAcceptor<Variable> {
-        Variable(std::string_view name)
+        Variable(const Token& name)
             : name(name)
         {
             // @todo add datatype of variable here.
@@ -319,7 +319,7 @@ namespace Expressions {
                     datatype.to_string()
             );
         }
-        std::string name;
+        Token name;
     };
 
     struct Unary : public ExpressionAcceptor<Unary> {
