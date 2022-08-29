@@ -1,11 +1,12 @@
 #pragma once
 
 #include "datatype.h"
-#include "parser.h"
 #include "token.h"
+#include "parser.h"
 #include <spdlog/spdlog.h>
 #include <variant>
 #include <cassert>
+#include <unordered_map>
 
 using Value = std::variant<
     std::shared_ptr<Statements::VariableDefinition>,
@@ -19,7 +20,7 @@ struct Environment {
         : enclosing { enclosing_env }
     {
     }
-            
+
     void define(const std::string& name, const Value& value) {
         values[name] = value;
     }
