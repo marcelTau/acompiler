@@ -92,12 +92,26 @@ namespace Statements {
         Token name;
         std::unique_ptr<Expression> initializer;
         DataType datatype;
+        std::size_t offset { 8 };
     };
 
     struct ExpressionStatement : public StatementAcceptor<ExpressionStatement> {
-        std::string to_string(std::size_t offset = 0) final {
-            return "ExpressionStatement";
+        ExpressionStatement(std::unique_ptr<Expression> expr)
+            : expression(std::move(expr))
+        {
         }
+
+        std::string to_string(std::size_t offset = 0) final {
+            return fmt::format(
+                    "{0:>{w}}ExpressionStatement:\n"
+                    "{0:>{w}}  .expression =\n{2}\n"
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    expression ? expression->to_string(offset + 4) : "nullptr"
+            );
+        }
+
+        std::unique_ptr<Expression> expression;
     };
 
     struct Print : public StatementAcceptor<Print> {

@@ -13,7 +13,6 @@ struct Compiler {
         spdlog::info("Compiler started");
         Scanner s;
         Parser p;
-        Emitter::Emitter e("testoutput.asm");
 
         if (ac == 1) {
             fmt::print(stderr, "No file provided\n");
@@ -46,13 +45,16 @@ struct Compiler {
         // @todo if parser is OK
         auto resolver = Resovler::Resolver(locals);
 
-        spdlog::info("Resolver done");
+
+        resolver.resolve(statements);
+
+        spdlog::info(fmt::format("Resolver done with {} locals", locals.size()));
+
         for (const auto &[expr, depth] : locals) {
             fmt::print("[ {}  --  {} ]\n", expr->to_string(), depth);
         }
 
-        resolver.resolve(statements);
-
+        Emitter::Emitter e("testoutput.asm", locals);
         e.emit(statements);
 
         return 0;
@@ -62,5 +64,5 @@ struct Compiler {
 private:
     Environment environment;
     Environment globals;
-    std::unordered_map<Expressions::Expression *, std::size_t> locals;
+    std::unordered_map<Expressions::Expression *, std::size_t> locals {};
 };

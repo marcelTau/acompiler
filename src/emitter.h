@@ -1,5 +1,6 @@
 #pragma once
 
+#include "environment.h"
 #include "parser.h"
 #include <fstream>
 #include <spdlog/spdlog.h>
@@ -57,8 +58,9 @@ static constexpr std::array registerNames {
 
 struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVisitor {
 
-    Emitter(const std::string& filepath)
+    Emitter(const std::string& filepath, std::unordered_map<Expressions::Expression *, std::size_t>& locals)
         : filepath(filepath)
+        , locals(locals)
     {
     }
 
@@ -99,8 +101,24 @@ private:
         statement->accept(*this);
     }
 
-    void visit(VariableDefinition& statement) override {}
-    void visit(ExpressionStatement& statement) override {}
+    void visit(VariableDefinition& statement) override {
+
+        // push initializer value on stack
+        statement.initializer->accept(*this);
+
+        auto idx1 = getNextFreeRegister();
+        emit_line(fmt::format("  pop {}", registerNames[idx1]), "pop initializer into register");
+
+        emit_line(fmt::format("  mov [rsp - {:#x}], {}", statement.offset, registerNames[idx1]), "pop initializer into register");
+        
+        // cleanup registers
+        m_registers.flip(idx1);
+    }
+
+    void visit(ExpressionStatement& statement) override {
+        //statement.accept(*this);
+    }
+
     void visit(Print& statement)override {}
 
     void visit(Return& statement) override {
@@ -243,8 +261,20 @@ private:
     }
 
     void visit(Bool& expression) override {}
-    void visit(Variable& expressi) override {}
+    void visit(Variable& expression) override {
+        // make lookup to get the right variable with the correct offset
+        auto var = lookup_variable(expression.name, &expression);
+    }
     void visit(Unary& expression) override {}
+
+    Object lookup_variable(const Token& name, Expressions::Expression *expression) {
+        try {
+            const auto distance = locals.at(expression);
+            return environment.getAt(distance, name.lexeme);
+        } catch (std::out_of_range&) {
+            assert(false && "no global env right now");
+        }
+    }
 
 private:
     std::size_t getNextFreeRegister() {
@@ -254,13 +284,15 @@ private:
                 return idx;
             }
         }
-
         assert(false && "getNextFreeRegister");
     }
 
     std::string filepath;
     std::bitset<Register::MAX_COUNT> m_registers {};
     std::stringstream output {};
+    std::unordered_map<Expressions::Expression *, std::size_t>& locals;
+    Environment environment;
+    Environment globals;
 };
 
 } // namespace Emitter

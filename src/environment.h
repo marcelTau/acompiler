@@ -1,6 +1,7 @@
 #pragma once
 
 #include "datatype.h"
+#include "parser.h"
 #include "token.h"
 #include <spdlog/spdlog.h>
 #include <variant>
@@ -12,6 +13,8 @@ struct Object {
     DataType type;
     Value value;
 };
+
+
 
 struct Environment {
 
@@ -25,7 +28,7 @@ struct Environment {
         values[name] = value;
     }
 
-    Object getAt(std::size_t distance, const std::string& name) {
+    Object getAt(std::size_t distance, std::string_view name) {
         if (distance == 0) {
             try {
                 return values.at(name);
