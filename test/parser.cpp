@@ -51,7 +51,8 @@ TEST(parser, var_with_name) {
     auto stmts = p.parse(tokens);
 
     Parser::StatementList expected;
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", nullptr));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, nullptr));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
@@ -63,7 +64,8 @@ TEST(parser, variable_assignment) {
 
     Parser::StatementList expected;
     auto number = std::make_unique<Expressions::Number>("10");
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(number)));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
@@ -76,7 +78,8 @@ TEST(parser, variable_assignment_with_type_annotation_int) {
     Parser::StatementList expected;
     auto dt = availableDataTypes.at("Int");
     auto number = std::make_unique<Expressions::Number>("10");
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number), dt));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(number), dt));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
@@ -89,7 +92,8 @@ TEST(parser, variable_assignment_with_type_annotation_bool) {
     Parser::StatementList expected;
     auto dt = availableDataTypes.at("Bool");
     auto boolExpr = std::make_unique<Expressions::Bool>("true");
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(boolExpr), dt));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(boolExpr), dt));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
@@ -102,6 +106,7 @@ TEST(parser, variable_assignment_with_plus_expression) {
     Parser::StatementList expected;
 
     auto lhs = std::make_unique<Expressions::Number>("10");
+    // TODO FIXME HELP
     //Token token = Token({ .type = TokenType::Plus, .lexeme = "+", .position = { .line = 1, .column = 12 } });
     //auto rhs = std::make_unique<Expressions::Number>("20");
 
@@ -129,7 +134,8 @@ TEST(parser, variable_assignment_with_minus_expression) {
     auto rhs = std::make_unique<Expressions::Number>("20");
 
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(initializer)));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
@@ -149,7 +155,8 @@ TEST(parser, variable_assignment_with_recurring_plus_expressions) {
 
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
     auto initializer2 = std::make_unique<Expressions::BinaryOperator>(std::move(initializer), token2, std::move(rrhs));
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer2)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(initializer2)));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
@@ -170,7 +177,8 @@ TEST(parser, variable_assignment_with_recurring_mixed_plus_minus_expressions) {
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
     auto initializer2 = std::make_unique<Expressions::BinaryOperator>(std::move(initializer), token2, std::move(rrhs));
 
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer2)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(initializer2)));
 
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
@@ -188,7 +196,8 @@ TEST(parser, variable_assignment_with_multiplication_expression) {
     auto rhs = std::make_unique<Expressions::Number>("20");
 
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(initializer)));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
@@ -205,7 +214,8 @@ TEST(parser, variable_assignment_with_division_expression) {
     auto rhs = std::make_unique<Expressions::Number>("20");
 
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(initializer)));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
@@ -226,7 +236,8 @@ TEST(parser, variable_assignment_with_recurring_mixed_star_slash_expressions) {
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
     auto initializer2 = std::make_unique<Expressions::BinaryOperator>(std::move(initializer), token2, std::move(rrhs));
 
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer2)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(initializer2)));
 
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
@@ -253,7 +264,8 @@ TEST(parser, variable_assignment_with_recurring_precedence_expressions) {
     auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(rhs), token2, std::move(rrhs));
     auto initializer2 = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(initializer));
 
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer2)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(initializer2)));
 
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
@@ -268,7 +280,8 @@ TEST(parser, variable_assignment_with_unary_minus) {
     auto number = std::make_unique<Expressions::Number>("10");
     auto token = Token({ .type = TokenType::Minus, .lexeme = "-", .position { .line = 1, .column = 9 } });
     auto unary = std::make_unique<Expressions::Unary>(token, std::move(number));
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(unary)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(unary)));
 
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
@@ -283,7 +296,8 @@ TEST(parser, variable_assignment_with_unary_negation_false) {
     auto bool_expr = std::make_unique<Expressions::Bool>("false");
     auto token = Token({ .type = TokenType::Bang, .lexeme = "!", .position { .line = 1, .column = 9 } });
     auto unary = std::make_unique<Expressions::Unary>(token, std::move(bool_expr));
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(unary)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(unary)));
 
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
@@ -298,7 +312,8 @@ TEST(parser, variable_assignment_with_unary_negation_true) {
     auto bool_expr = std::make_unique<Expressions::Bool>("true");
     auto token = Token({ .type = TokenType::Bang, .lexeme = "!", .position { .line = 1, .column = 9 } });
     auto unary = std::make_unique<Expressions::Unary>(token, std::move(bool_expr));
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(unary)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(unary)));
 
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
@@ -316,7 +331,8 @@ TEST(parser, variable_assignment_with_double_unary_negation_true) {
     auto token_inner = Token({ .type = TokenType::Bang, .lexeme = "!", .position { .line = 1, .column = 10 } });
     auto unary_inner = std::make_unique<Expressions::Unary>(token_inner, std::move(bool_expr));
     auto unary = std::make_unique<Expressions::Unary>(token, std::move(unary_inner));
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(unary)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(unary)));
 
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
@@ -329,10 +345,12 @@ TEST(parser, variable_assignment_with_variable_identifier) {
 
     Parser::StatementList expected;
     auto number = std::make_unique<Expressions::Number>("10");
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number)));
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(number)));
 
+    name = { .type = TokenType::Identifier, .lexeme = "b", .position = { .line = 1, .column = 17 }, };
     auto var = std::make_unique<Expressions::Variable>("a");
-    expected.push_back(std::make_unique<Statements::VariableDefinition>("b", std::move(var)));
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(var)));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
@@ -405,7 +423,8 @@ TEST(parser, non_empty_function) {
     auto returnType = availableDataTypes.at("Int");
 
     auto number = std::make_unique<Expressions::Number>("10");
-    body.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number)));
+    Token name2 = { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 2, .column = 6 }, };
+    body.push_back(std::make_unique<Statements::VariableDefinition>(name2, std::move(number)));
 
     auto funcStmt = std::make_unique<Statements::Function>(name, std::move(params), std::move(body), returnType);
 
@@ -431,12 +450,13 @@ TEST(parser, non_empty_function_with_parameters) {
 
     std::vector<std::unique_ptr<Statements::Statement>> body {};
     auto number = std::make_unique<Expressions::Number>("10");
-    body.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(number)));
+    Token name2 = { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 2, .column = 6 }, };
+    body.push_back(std::make_unique<Statements::VariableDefinition>(name2, std::move(number)));
 
     auto funcStmt = std::make_unique<Statements::Function>(name, std::move(params), std::move(body), returnType);
 
     expected.push_back(std::move(funcStmt));
-    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("\n===========================\n{}\n===========================\n{}\n===========================\n", stmts, expected);
 }
 
 TEST(parser, return_without_expression) {

@@ -62,7 +62,7 @@ namespace Statements {
     };
 
     struct VariableDefinition : public StatementAcceptor<VariableDefinition> {
-        VariableDefinition(std::string_view name, std::unique_ptr<Expression> initializer, DataType data_type = {})
+        VariableDefinition(const Token& name, std::unique_ptr<Expression> initializer, DataType data_type = {})
             : name(name)
             , initializer(std::move(initializer))
             , datatype(std::move(data_type))
@@ -89,7 +89,7 @@ namespace Statements {
 
         }
 
-        std::string name;
+        Token name;
         std::unique_ptr<Expression> initializer;
         DataType datatype;
     };
