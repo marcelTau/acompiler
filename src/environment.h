@@ -7,28 +7,24 @@
 #include <variant>
 #include <cassert>
 
-using Value = std::variant<int, bool>;
-
-struct Object {
-    DataType type;
-    Value value;
-};
-
-
+using Value = std::variant<
+    std::shared_ptr<Statements::VariableDefinition>,
+    std::shared_ptr<Statements::Function>
+>;
 
 struct Environment {
 
     Environment() = default;
-    Environment(Environment *enclosing_env)
+    Environment(std::shared_ptr<Environment> enclosing_env)
         : enclosing { enclosing_env }
     {
     }
             
-    void define(const std::string& name, const Object& value) {
+    void define(const std::string& name, const Value& value) {
         values[name] = value;
     }
 
-    Object getAt(std::size_t distance, std::string_view name) {
+    Value getAt(std::size_t distance, std::string_view name) {
         if (distance == 0) {
             try {
                 return values.at(name);
@@ -40,17 +36,17 @@ struct Environment {
         return enclosing->getAt(distance - 1, name);
     }
 
-    Object get(const Token& name) {
+    Value get(const Token& name) {
         try {
             return values.at(name.lexeme);
         } catch (std::out_of_range&) {
             assert(false && "TODO: Environment::get()");
         }
         assert(false);
-        return Object{};
+        return Value{};
     }
 
-    void assign(const Token& name, const Object& value) {
+    void assign(const Token& name, const Value& value) {
         if (values.contains(name.lexeme)) {
             values[name.lexeme] = value;
         } else if (enclosing != nullptr) {
@@ -61,7 +57,7 @@ struct Environment {
         }
     }
 
-    void assignAt(std::size_t distance, const Token& name, const Object& value) {
+    void assignAt(std::size_t distance, const Token& name, const Value& value) {
         if (distance == 0) {
             values.insert({ name.lexeme, value });
         } else {
@@ -71,6 +67,7 @@ struct Environment {
     }
 
 private:
-    std::unordered_map<std::string_view, Object> values;
-    Environment *enclosing { nullptr };
+    using VariableName = std::string_view;
+    std::unordered_map<VariableName, Value> values;
+    std::shared_ptr<Environment> enclosing { nullptr };
 };

@@ -7,6 +7,7 @@
 #include <charconv>
 #include <cassert>
 #include <sstream>
+#include "environment.h"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 #include "token.h"
@@ -35,7 +36,6 @@ namespace Statements {
     struct Print;
     struct Function;
     struct Return;
-    //struct Assignment;
 
     struct StatementVisitor {
         virtual void visit(VariableDefinition& statement) = 0;
@@ -43,8 +43,6 @@ namespace Statements {
         virtual void visit(Print& statement) = 0;
         virtual void visit(Function& statement) = 0;
         virtual void visit(Return& statement) = 0;
-        //virtual void visit(Assignment& statement) = 0;
-
         virtual ~StatementVisitor() = default;
     };
 
@@ -93,6 +91,7 @@ namespace Statements {
         std::unique_ptr<Expression> initializer;
         DataType datatype;
         std::size_t offset { 8 };
+        std::size_t scope_distance { 0 };
     };
 
     struct ExpressionStatement : public StatementAcceptor<ExpressionStatement> {
@@ -169,6 +168,7 @@ namespace Statements {
         std::vector<std::unique_ptr<Statement>> body;
         std::size_t stack_size { 0 };
         DataType return_datatype;
+        std::shared_ptr<Environment> environment;
     };
 
     struct Return : public StatementAcceptor<Return> {
