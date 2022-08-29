@@ -26,7 +26,7 @@ std::string run_file(std::string_view filepath) {
 }
 
 TEST(emitter, return_single) {
-    std::string filepath = "/tmp/return_single";
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
@@ -44,7 +44,7 @@ end
 }
 
 TEST(emitter, return_addition) {
-    std::string filepath = "/tmp/return_addition";
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
@@ -61,7 +61,7 @@ end
 }
 
 TEST(emitter, return_subtraction) {
-    std::string filepath = "/tmp/return_subtraction";
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
@@ -78,7 +78,7 @@ end
 }
 
 TEST(emitter, return_add_sub) {
-    std::string filepath = "/tmp/return_add_sub";
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
@@ -95,7 +95,7 @@ end
 }
 
 TEST(emitter, return_mixed) {
-    std::string filepath = "/tmp/return_mixed";
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
@@ -112,7 +112,7 @@ end
 }
 
 TEST(emitter, return_division) {
-    std::string filepath = "/tmp/return_division";
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
@@ -126,4 +126,21 @@ end
 
     e.emit(p.parse(s.scan(code)));
     EXPECT_EQ(run_file(filepath), "3");
+}
+
+TEST(emitter, return_precedence_check) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Emitter::Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    return 15 + 5 * 2 - 9 / 3;
+end
+)";
+
+    e.emit(p.parse(s.scan(code)));
+    EXPECT_EQ(run_file(filepath), "22");
 }
