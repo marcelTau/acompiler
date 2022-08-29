@@ -46,6 +46,7 @@ add_executable(
     test/scanner.cpp
     test/token.cpp
     test/parser.cpp
+    test/emitter.cpp
     ${SOURCES}
 )
 

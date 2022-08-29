@@ -57,7 +57,10 @@ static constexpr std::array registerNames {
 
 struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVisitor {
 
-    Emitter() = default;
+    Emitter(const std::string& filepath)
+        : filepath(filepath)
+    {
+    }
 
     void emit(const StatementList& statements) {
         emit_line("", "=== Auto-generated code ===");
@@ -80,7 +83,7 @@ struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVis
             emit_statement(statement);
         }
 
-        std::ofstream file("testoutput.asm");
+        std::ofstream file(filepath);
         file << output.str();
         file.close();
 
@@ -255,6 +258,7 @@ private:
         assert(false && "getNextFreeRegister");
     }
 
+    std::string filepath;
     std::bitset<Register::MAX_COUNT> m_registers {};
     std::stringstream output {};
 };

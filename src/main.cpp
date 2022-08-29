@@ -11,7 +11,7 @@ int main(int ac, char **av) {
     spdlog::info("Compiler started");
     Scanner s;
     Parser p;
-    Emitter::Emitter e;
+    Emitter::Emitter e("testoutput.asm");
 
     if (ac == 1) {
         fmt::print(stderr, "No file provided\n");
