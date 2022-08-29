@@ -106,19 +106,17 @@ TEST(parser, variable_assignment_with_plus_expression) {
     Parser::StatementList expected;
 
     auto lhs = std::make_unique<Expressions::Number>("10");
-    // TODO FIXME HELP
-    //Token token = Token({ .type = TokenType::Plus, .lexeme = "+", .position = { .line = 1, .column = 12 } });
-    //auto rhs = std::make_unique<Expressions::Number>("20");
 
-    //fmt::print(stderr, "{} {}", lhs->to_string(), rhs->to_string());
+    Token token = Token({ .type = TokenType::Plus, .lexeme = "+", .position = { .line = 1, .column = 12 } });
+    auto rhs = std::make_unique<Expressions::Number>("20");
 
-    EXPECT_TRUE(true);
-    //return;
+    fmt::print(stderr, "{} {}", lhs->to_string(), rhs->to_string());
 
-    //auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
+    auto initializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), token, std::move(rhs));
 
-    //expected.push_back(std::make_unique<Statements::VariableDefinition>("a", std::move(initializer)));
-    //EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+    Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
+    expected.push_back(std::make_unique<Statements::VariableDefinition>(name, std::move(initializer)));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
 TEST(parser, variable_assignment_with_minus_expression) {
