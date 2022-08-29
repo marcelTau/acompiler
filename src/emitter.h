@@ -124,19 +124,14 @@ private:
 
     void visit(Assignment& expression) override {}
     void visit(BinaryOperator& expression) override {
-        //std::size_t firstIdx, secondIdx;
-        std::string_view op;
+        // recursivly push lhs on stack
+        expression.lhs->accept(*this);
+
+        // recursivly push rhs on stack
+        expression.rhs->accept(*this);
 
         switch (expression.operator_type.type) {
             case TokenType::Plus: {
-                op = "add";
-
-                // recursivly push lhs on stack
-                expression.lhs->accept(*this);
-
-                // recursivly push rhs on stack
-                expression.rhs->accept(*this);
-
                 auto idx1 = getNextFreeRegister();
                 emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
 
@@ -152,24 +147,49 @@ private:
                 m_registers.flip(idx2);
                 break;
             }
-            case TokenType::Minus: 
-                op = "sub";
+            case TokenType::Minus: {
+                auto idx1 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+
+                auto idx2 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx2]), "take second value from stack");
+
+                // do the subtraction and push result on stack
+                emit_line(fmt::format("  sub {}, {}", registerNames[idx2], registerNames[idx1]));
+                emit_line(fmt::format("  push {}", registerNames[idx2]));
+
+                // clear the used registers
+                m_registers.flip(idx1);
+                m_registers.flip(idx2);
                 break;
+            }
             case TokenType::Star: {
-                op = "mul";
-
-                // recursivly push lhs on stack
-                expression.lhs->accept(*this);
-
-                // recursivly push rhs on stack
-                expression.rhs->accept(*this);
-
                 auto idx1 = getNextFreeRegister();
                 emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
 
                 emit_line(fmt::format("  pop rax"), "take second value from stack");
 
                 emit_line(fmt::format("  mul {}", registerNames[idx1]));
+
+                // @todo if i need to keep rax consistent, then push it in the beginning and pop it at the end, therefore mov <free_register>, rax before
+                emit_line(fmt::format("  push rax"));
+
+                // clear the used registers
+                m_registers.flip(idx1);
+
+                break;
+            }
+            case TokenType::Slash: {
+
+                emit_line("  xor rdx, rdx", "set rdx to 0 so it does not mess with the division");
+                auto idx1 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+                emit_line(fmt::format("  pop rax"), "take second value from stack");
+
+
+                emit_line(fmt::format("  div {}", registerNames[idx1]));
+
+                // @todo if i need to keep rax consistent, then push it in the beginning and pop it at the end, therefore mov <free_register>, rax before
                 emit_line(fmt::format("  push rax"));
 
                 // clear the used registers
