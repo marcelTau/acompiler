@@ -47,6 +47,7 @@ add_executable(
     test/token.cpp
     test/parser.cpp
     test/emitter.cpp
+    test/resolver.cpp
     ${SOURCES}
 )
 
