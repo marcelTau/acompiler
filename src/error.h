@@ -16,7 +16,7 @@ enum class ErrorType : std::uint8_t {
 struct Error {
     ErrorType type { ErrorType::None };
     Token token;
-    std::string_view msg;
+    std::string msg;
 };
 
 /**
@@ -29,7 +29,8 @@ struct Result {
     Result(T &&value) : value(std::move(value)) {}
 
     static auto Error(ErrorType type, const Token& token, std::string_view msg) -> Result {
-        struct Error e { .type = type, .token = token, .msg = msg };
+        std::string smsg(msg);
+        struct Error e { .type = type, .token = token, .msg = smsg };
         return Result(e);
     }
 
@@ -38,7 +39,8 @@ struct Result {
     }
 
     static auto ParseError(const Token& token, std::string_view msg) -> Result {
-        struct Error e { .type = ErrorType::ParserError, .token = token, .msg = msg };
+        std::string smsg(msg);
+        struct Error e { .type = ErrorType::ParserError, .token = token, .msg = smsg };
         return Result(e);
     }
 
@@ -46,7 +48,7 @@ struct Result {
         return !std::holds_alternative<struct Error>(value);
     }
 
-    [[nodiscard]] constexpr struct Error get_err() const {
+    [[nodiscard]] struct Error get_err() const {
         return std::get<struct Error>(value);
     }
 

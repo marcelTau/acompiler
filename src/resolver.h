@@ -32,10 +32,11 @@ struct Resolver
     Resolver() = default;
 
     void error(const Token& name, std::string_view message) {
+        std::string smsg(message);
         throw Error { 
             .type = ErrorType::ResolverError, 
             .token = name, 
-            .msg = message 
+            .msg = smsg
         };
     }
 
@@ -226,6 +227,7 @@ struct Resolver
         // check if we are in a function
         if (current_function == FunctionType::None) {
             spdlog::error(fmt::format("Can't return outside of function."));
+            error(Token{}, "Can't return outside of function.");
         }
 
         // resolve the value of the return statement
