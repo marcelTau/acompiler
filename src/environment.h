@@ -11,9 +11,9 @@
 using Value = Token;
 
 //using Value = std::variant<
-    //Statements::VariableDefinition,
-    //Expressions::Variable,
-    //Statements::Function
+    //std::shared_ptr<Statements::VariableDefinition>,
+    //std::shared_ptr<Expressions::Variable>,
+    //std::shared_ptr<Statements::Function>
 //>;
 
 struct ValuePrintVisitor {
@@ -22,7 +22,6 @@ struct ValuePrintVisitor {
         return value->to_string();
     }
 };
-
 
 struct Environment {
     Environment() = default;

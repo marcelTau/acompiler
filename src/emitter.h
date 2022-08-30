@@ -267,7 +267,8 @@ private:
     void visit(Variable& expression) override {
         // make lookup to get the right variable with the correct offset
         auto var = lookup_variable(expression.name);
-        fmt::print(stderr, ".. {}", var);
+
+        fmt::print("{}", var);
     }
 
     void visit(Unary& expression) override {}
@@ -280,7 +281,9 @@ private:
             }
             const auto distance = locals.at(name);
             spdlog::info(fmt::format("Distance for variable '{}' is {}", name, distance));
-            return environment.getAt(distance, name.lexeme);
+            auto found_value = environment.getAt(distance, name.lexeme);
+            spdlog::info(fmt::format("Found {}", found_value));
+            return found_value;
         } catch (std::out_of_range&) {
             assert(false && "no global env right now");
         }
