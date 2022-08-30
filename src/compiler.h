@@ -46,25 +46,25 @@ struct Compiler {
         // @todo if parser is OK
         //auto resolver = Resovler::Resolver;
 
-        Resovler::Resolver resolver;
+        //Resovler::Resolver resolver;
 
 
-        try {
-            locals = resolver.resolve(statements);
-        } catch (Error& e) {
-            spdlog::error(fmt::format("Resolver failed on token: {}", e.token));
-            return 1;
-        }
+        //try {
+            //locals = resolver.resolve(statements);
+        //} catch (Error& e) {
+            //spdlog::error(fmt::format("Resolver failed on token: {}", e.token));
+            //return 1;
+        //}
 
-        spdlog::info(fmt::format("Resolver done with {} locals", locals.size()));
+        //spdlog::info(fmt::format("Resolver done with {} locals", locals.size()));
 
 
-        for (const auto &[expr, depth] : locals) {
-            fmt::print("[ {}  --  {} ]\n", expr, depth);
-        }
+        //for (const auto &[expr, depth] : locals) {
+            //fmt::print("[ {}  --  {} ]\n", expr, depth);
+        //}
 
-        Emitter::Emitter e("testoutput.asm", locals);
-        e.emit(statements);
+        //Emitter::Emitter e("testoutput.asm", locals);
+        //e.emit(statements);
 
         return 0;
     }

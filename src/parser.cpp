@@ -112,7 +112,6 @@ auto Parser::function() -> Result<UniqStatement> {
     }
 
     std::ignore = consume(TokenType::RightParen, "Expect ')' after parameters.");
-
     std::ignore = consume(TokenType::Arrow, "Expect '->' after function declaration.");
 
     auto return_datatype_token = consume(TokenType::Identifier, "Expect return value after '->'.");
@@ -166,7 +165,8 @@ auto Parser::statement() -> Result<UniqStatement> {
     if (checkAndAdvance(TokenType::Return)) {
         return returnStatement();
     }
-    assert(false && "expression_statement()");
+
+    return expressionStatement();
 }
 
 auto Parser::returnStatement() -> Result<UniqStatement> {
@@ -192,7 +192,8 @@ auto Parser::expressionStatement() -> Result<UniqStatement> {
     }
     std::ignore = consume(TokenType::Semicolon, "Expect ';' after expression.");
 
-    assert(false && "todo ddasdf");
+    auto exprStatement = std::make_unique<Statements::ExpressionStatement>(expr.unwrap());
+    return Result<UniqStatement>(std::move(exprStatement));
 }
 
 auto Parser::printStatement() -> Result<UniqStatement> {
@@ -240,6 +241,8 @@ auto Parser::varDeclaration() -> Result<UniqStatement> {
         } else {
             initializer = result.unwrap();
         }
+    } else {
+        return Result<UniqStatement>::ParseError(name.unwrap(), fmt::format("All variables have to be initialized"));
     }
 
     std::ignore = consume(TokenType::Semicolon, "Expect ';' after variable declaration.");
@@ -256,8 +259,23 @@ auto Parser::expression() -> Result<UniqExpression> {
 auto Parser::assignment() -> Result<UniqExpression> {
     auto expr = term();
 
+    if (!expr) {
+        return expr.get_err();
+    }
+
     if (checkAndAdvance(TokenType::Equal)) {
-        fmt::print("todo multi assignment");
+        //auto equals = previous(); // use this as error token
+        auto value = assignment();
+
+        if (!value) {
+            return value.get_err();
+        }
+
+        // @todo add errorhandling
+        auto name = dynamic_cast<Expressions::Variable *>(expr.unwrap().get())->name;
+        auto assignment = std::make_unique<Expressions::Assignment>(name, value.unwrap());
+
+        return Result<UniqExpression>(std::move(assignment));
     }
     return expr;
 }

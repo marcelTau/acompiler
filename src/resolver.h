@@ -29,9 +29,10 @@ struct Resolver
     : public Expressions::ExpressionVisitor, 
              Statements::StatementVisitor 
 {
-    Resolver() {
-        locals.insert({ Token{}, -1 });
-    }
+    Resolver() = default;
+    //Resolver() {
+        //locals.insert({ Token{}, -1 });
+    //}
 
     void error(const Token& name, std::string_view message) {
         std::string smsg(message);

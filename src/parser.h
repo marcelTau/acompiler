@@ -24,7 +24,6 @@ namespace Expressions {
         virtual std::string to_string(std::size_t offset = 0) = 0;
 
         DataType datatype {};
-        // @todo datatype
     };
 } // namespace Expression
 
@@ -70,11 +69,6 @@ namespace Statements {
         }
 
         std::string to_string(std::size_t offset = 0) final {
-            //return fmt::format("VariableDefinition: .name {{ {} }}, .initializer {{ {} }}, .dt {{ {} }}", 
-                               //name,
-                               //initializer ? initializer->to_string() : "nullptr",
-                               //data_type.to_string());
-
             return fmt::format(
                     "{0:>{w}}VariableDefinition:\n"
                     "{0:>{w}}  .name = {2}\n"
@@ -105,7 +99,7 @@ namespace Statements {
         std::string to_string(std::size_t offset = 0) final {
             return fmt::format(
                     "{0:>{w}}ExpressionStatement:\n"
-                    "{0:>{w}}  .expression =\n{2}\n"
+                    "{0:>{w}}  .expression =\n{2}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
                     expression ? expression->to_string(offset + 4) : "nullptr"
@@ -221,6 +215,26 @@ namespace Expressions {
     };
 
     struct Assignment : public ExpressionAcceptor<Assignment> {
+        Assignment(Token name, std::unique_ptr<Expression> value)
+            : name(name)
+            , value(std::move(value))
+        {
+        }
+
+        std::string to_string(std::size_t offset = 0) final {
+            return fmt::format(
+                    "{0:>{w}}Assignment:\n"
+                    "{0:>{w}}  .name = {2}\n"
+                    "{0:>{w}}  .value =\n{3}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    name,
+                    value ? value->to_string(offset + 4) : "nullptr"
+            );
+        }
+
+        Token name;
+        std::unique_ptr<Expression> value;
     };
 
     struct BinaryOperator : public ExpressionAcceptor<BinaryOperator> {
@@ -229,19 +243,12 @@ namespace Expressions {
             , operator_type(operator_type)
             , rhs{std::move(rhs)}
         {
-            if (this->lhs->datatype != this->rhs->datatype) {
-                assert(false && "BinaryOperator has two different datatypes");
-            }
-
-            datatype = this->lhs->datatype;
+            // @todo the datatype should be set in the typechecker and not in the parser,
+            // since the parser does not know how to resolve local variables to
+            // their actual datatype
         }
 
         std::string to_string(std::size_t offset = 0) final {
-            //return fmt::format("BinaryOperator({}): .lhs {{ {} }}, .operator {{ {} }}, .rhs {{ {} }}", 
-                               //datatype.to_string(),
-                               //lhs->to_string(), 
-                               //operator_type, 
-                               //rhs->to_string());
             return fmt::format(
                     "{0:>{w}}BinaryOperator:\n"
                     "{0:>{w}}  .datatype = {2}\n"

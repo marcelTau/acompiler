@@ -3,7 +3,7 @@
 cmake -S . -B build 
 cmake --build build 
 [[ $? -ne 0 ]] && echo "COMPILATION FAILED ..." && exit 1
-./build/acompiler today
+./build/acompiler today2
 
 # echo "==================== LOX ===================="
 # cat today
