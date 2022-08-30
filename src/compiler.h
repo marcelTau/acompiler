@@ -1,6 +1,7 @@
 #pragma once
 
 #include "environment.h"
+#include "error.h"
 #include "resolver.h"
 #include "scanner.h"
 #include "parser.h"
@@ -43,19 +44,29 @@ struct Compiler {
 
 
         // @todo if parser is OK
-        auto resolver = Resovler::Resolver(locals);
+        //auto resolver = Resovler::Resolver;
+
+        Resovler::Resolver resolver;
 
 
-        resolver.resolve(statements);
+        try {
+            locals = resolver.resolve(statements);
+        } catch (Error& e) {
+            spdlog::error(fmt::format("Resolver failed on token: {}", e.token));
+            return 1;
+        }
 
         spdlog::info(fmt::format("Resolver done with {} locals", locals.size()));
 
+
+        ValuePrintVisitor printer;
+
         for (const auto &[expr, depth] : locals) {
-            fmt::print("[ {}  --  {} ]\n", expr->to_string(), depth);
+            fmt::print("[ {}  --  {} ]\n", std::visit(printer, expr), depth);
         }
 
-        Emitter::Emitter e("testoutput.asm", locals);
-        e.emit(statements);
+        //Emitter::Emitter e("testoutput.asm", locals);
+        //e.emit(statements);
 
         return 0;
     }
@@ -64,5 +75,5 @@ struct Compiler {
 private:
     Environment environment;
     Environment globals;
-    std::unordered_map<Expressions::Expression *, std::size_t> locals {};
+    std::unordered_map<Value, std::size_t> locals {};
 };

@@ -263,18 +263,18 @@ private:
     void visit(Bool& expression) override {}
     void visit(Variable& expression) override {
         // make lookup to get the right variable with the correct offset
-        auto var = lookup_variable(expression.name, &expression);
+        //auto var = lookup_variable(expression.name, &expression);
     }
     void visit(Unary& expression) override {}
 
-    Object lookup_variable(const Token& name, Expressions::Expression *expression) {
-        try {
-            const auto distance = locals.at(expression);
-            return environment.getAt(distance, name.lexeme);
-        } catch (std::out_of_range&) {
-            assert(false && "no global env right now");
-        }
-    }
+    //Object lookup_variable(const Token& name, Expressions::Expression *expression) {
+        //try {
+            //const auto distance = locals.at(expression);
+            //return environment.getAt(distance, name.lexeme);
+        //} catch (std::out_of_range&) {
+            //assert(false && "no global env right now");
+        //}
+    //}
 
 private:
     std::size_t getNextFreeRegister() {

@@ -10,8 +10,17 @@
 
 using Value = std::variant<
     std::shared_ptr<Statements::VariableDefinition>,
+    std::shared_ptr<Expressions::Variable>,
     std::shared_ptr<Statements::Function>
 >;
+
+struct ValuePrintVisitor {
+    template <typename T>
+    std::string operator()(const T& value) {
+        return value->to_string();
+    }
+};
+
 
 struct Environment {
 

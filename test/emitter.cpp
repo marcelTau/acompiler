@@ -24,13 +24,13 @@ std::string run_file(std::string_view filepath) {
     }
     return ret;
 }
-
+static inline std::unordered_map<Expressions::Expression *, std::size_t> test;
 TEST(emitter, return_single) {
     std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter::Emitter e(filepathasm, test);
 
     auto code = R"(
 fun main() -> Int
@@ -48,7 +48,7 @@ TEST(emitter, return_addition) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter::Emitter e(filepathasm, test);
 
     auto code = R"(
 fun main() -> Int
@@ -65,7 +65,7 @@ TEST(emitter, return_subtraction) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter::Emitter e(filepathasm, test);
 
     auto code = R"(
 fun main() -> Int
@@ -82,7 +82,7 @@ TEST(emitter, return_add_sub) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter::Emitter e(filepathasm, test);
 
     auto code = R"(
 fun main() -> Int
@@ -99,7 +99,7 @@ TEST(emitter, return_mixed) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter::Emitter e(filepathasm, test);
 
     auto code = R"(
 fun main() -> Int
@@ -116,7 +116,7 @@ TEST(emitter, return_division) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter::Emitter e(filepathasm, test);
 
     auto code = R"(
 fun main() -> Int
@@ -133,7 +133,7 @@ TEST(emitter, return_precedence_check) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter::Emitter e(filepathasm, test);
 
     auto code = R"(
 fun main() -> Int

@@ -7,12 +7,13 @@
 #include <charconv>
 #include <cassert>
 #include <sstream>
-#include "environment.h"
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 #include "token.h"
 #include "error.h"
 #include "datatype.h"
+
+struct Environment;
 
 /// @todo ugly hacky stuff, try to fix this pls
 namespace Expressions {
@@ -324,7 +325,7 @@ namespace Expressions {
         std::string to_string(std::size_t offset = 0) final {
             //return fmt::format("VariableExpression({}): .name {{ {} }}", datatype.to_string(), name);
             return fmt::format(
-                    "{0:>{w}}VariableExpression:\n"
+                    "{0:>{w}}Variable:\n"
                     "{0:>{w}}  .name = {2}\n"
                     "{0:>{w}}  .datatype = {3}\n",
                     "",  // dummy argument for padding

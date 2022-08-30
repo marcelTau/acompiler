@@ -9,6 +9,7 @@
 
 enum class ErrorType : std::uint8_t {
     ParserError,
+    ResolverError,
     None,
 };
 
