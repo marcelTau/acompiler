@@ -24,7 +24,7 @@ std::string run_file(std::string_view filepath) {
     }
     return ret;
 }
-static inline std::unordered_map<Expressions::Expression *, std::size_t> test;
+static inline std::unordered_map<Value, std::size_t> test;
 TEST(emitter, return_single) {
     std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
     auto filepathasm = filepath + ".asm";

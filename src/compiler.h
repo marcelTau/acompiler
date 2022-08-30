@@ -65,8 +65,8 @@ struct Compiler {
             fmt::print("[ {}  --  {} ]\n", std::visit(printer, expr), depth);
         }
 
-        //Emitter::Emitter e("testoutput.asm", locals);
-        //e.emit(statements);
+        Emitter::Emitter e("testoutput.asm", locals);
+        e.emit(statements);
 
         return 0;
     }

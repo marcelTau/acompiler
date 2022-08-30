@@ -58,7 +58,7 @@ static constexpr std::array registerNames {
 
 struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVisitor {
 
-    Emitter(const std::string& filepath, std::unordered_map<Expressions::Expression *, std::size_t>& locals)
+    Emitter(const std::string& filepath, std::unordered_map<Value, std::size_t>& locals)
         : filepath(filepath)
         , locals(locals)
     {
@@ -290,7 +290,7 @@ private:
     std::string filepath;
     std::bitset<Register::MAX_COUNT> m_registers {};
     std::stringstream output {};
-    std::unordered_map<Expressions::Expression *, std::size_t>& locals;
+    std::unordered_map<Value, std::size_t>& locals;
     Environment environment;
     Environment globals;
 };
