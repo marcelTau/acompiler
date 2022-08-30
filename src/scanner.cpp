@@ -163,12 +163,10 @@ void Scanner::addToken(const TokenType& type, const std::string_view literal) {
         : std::string_view { m_source.begin() + m_start, m_source.begin() + m_current };
 
     if (type == TokenType::Eof) {
-        m_tokens.push_back(Token { .type { type }, .lexeme { "" }, .position { m_position } });
+        //m_tokens.push_back(Token { type , "",  m_position });
+        m_tokens.push_back(Token { .type = type , .lexeme = "" , .position = m_position });
     } else {
-        m_tokens.push_back(Token { 
-                               .type { type },
-                               .lexeme { lexeme },
-                               .position { m_position } });
+        m_tokens.push_back(Token { .type = type , .lexeme = lexeme , .position = m_position });
     }
 }
 

@@ -61,6 +61,7 @@ namespace Statements {
     };
 
     struct VariableDefinition : public StatementAcceptor<VariableDefinition> {
+        VariableDefinition() = default;
         VariableDefinition(const Token& name, std::unique_ptr<Expression> initializer, DataType data_type = {})
             : name(name)
             , initializer(std::move(initializer))

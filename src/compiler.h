@@ -59,10 +59,8 @@ struct Compiler {
         spdlog::info(fmt::format("Resolver done with {} locals", locals.size()));
 
 
-        ValuePrintVisitor printer;
-
         for (const auto &[expr, depth] : locals) {
-            fmt::print("[ {}  --  {} ]\n", std::visit(printer, expr), depth);
+            fmt::print("[ {}  --  {} ]\n", expr, depth);
         }
 
         Emitter::Emitter e("testoutput.asm", locals);
@@ -75,5 +73,5 @@ struct Compiler {
 private:
     Environment environment;
     Environment globals;
-    std::unordered_map<Value, std::size_t> locals {};
+    std::unordered_map<Value, std::size_t> locals;
 };

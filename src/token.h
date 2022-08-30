@@ -127,13 +127,36 @@ struct TokenPosition {
 };
 
 struct Token {
+
+    //Token(TokenType type, std::string_view lexeme, TokenPosition pos)
+        //: type(type), lexeme(lexeme), position(pos)
+    //{}
+
     TokenType type;
     std::string_view lexeme { "" };
-    TokenPosition position;
+    TokenPosition position { -1, -1 };
+
+    [[nodiscard]] std::string getLexeme() const {
+        std::string s(lexeme);
+        return s;
+    }
 
     bool operator==(const Token& other) const {
         return type == other.type && lexeme == other.lexeme && position == other.position;
     }
+};
+
+namespace std {
+template <>
+struct hash<Token> {
+    std::size_t operator()(const Token& token) const {
+        return (
+              (std::hash<std::string_view>()(token.lexeme)
+            ^ (std::hash<std::uint8_t>()(static_cast<std::uint8_t>(token.type)) << 1)) >> 1)
+            ^ (std::hash<std::size_t>()(token.position.line + token.position.column) << 1
+        );
+    }
+};
 };
 
 template<>

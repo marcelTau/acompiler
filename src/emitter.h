@@ -110,6 +110,8 @@ private:
         emit_line(fmt::format("  pop {}", registerNames[idx1]), "pop initializer into register");
 
         emit_line(fmt::format("  mov [rsp - {:#x}], {}", statement.offset, registerNames[idx1]), "pop initializer into register");
+
+        environment.define(statement.name.getLexeme(), statement.name);
         
         // cleanup registers
         m_registers.flip(idx1);
@@ -119,7 +121,7 @@ private:
         //statement.accept(*this);
     }
 
-    void visit(Print& statement)override {}
+    void visit(Print& statement) override {}
 
     void visit(Return& statement) override {
         statement.value->accept(*this);
@@ -261,20 +263,28 @@ private:
     }
 
     void visit(Bool& expression) override {}
+
     void visit(Variable& expression) override {
         // make lookup to get the right variable with the correct offset
-        //auto var = lookup_variable(expression.name, &expression);
+        auto var = lookup_variable(expression.name);
+        fmt::print(stderr, ".. {}", var);
     }
+
     void visit(Unary& expression) override {}
 
-    //Object lookup_variable(const Token& name, Expressions::Expression *expression) {
-        //try {
-            //const auto distance = locals.at(expression);
-            //return environment.getAt(distance, name.lexeme);
-        //} catch (std::out_of_range&) {
-            //assert(false && "no global env right now");
-        //}
-    //}
+    Value lookup_variable(const Token& name) {
+        try {
+            fmt::print(stderr, "======================\nDo lookup for {}\n======================", name);
+            for (auto &[expr, depth] : locals) {
+                fmt::print(stderr, "======================\nLocals:{} -- {}\n======================", name, depth);
+            }
+            const auto distance = locals.at(name);
+            spdlog::info(fmt::format("Distance for variable '{}' is {}", name, distance));
+            return environment.getAt(distance, name.lexeme);
+        } catch (std::out_of_range&) {
+            assert(false && "no global env right now");
+        }
+    }
 
 private:
     std::size_t getNextFreeRegister() {

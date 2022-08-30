@@ -8,11 +8,13 @@
 #include <cassert>
 #include <unordered_map>
 
-using Value = std::variant<
-    std::shared_ptr<Statements::VariableDefinition>,
-    std::shared_ptr<Expressions::Variable>,
-    std::shared_ptr<Statements::Function>
->;
+using Value = Token;
+
+//using Value = std::variant<
+    //Statements::VariableDefinition,
+    //Expressions::Variable,
+    //Statements::Function
+//>;
 
 struct ValuePrintVisitor {
     template <typename T>
@@ -23,7 +25,6 @@ struct ValuePrintVisitor {
 
 
 struct Environment {
-
     Environment() = default;
     Environment(std::shared_ptr<Environment> enclosing_env)
         : enclosing { enclosing_env }
@@ -31,13 +32,21 @@ struct Environment {
     }
 
     void define(const std::string& name, const Value& value) {
+        spdlog::info(fmt::format("Environment: Define {} {}", name, value));
         values[name] = value;
     }
 
     Value getAt(std::size_t distance, std::string_view name) {
+        spdlog::info(fmt::format("Environment: get at {} {}", distance, name));
         if (distance == 0) {
             try {
-                return values.at(name);
+                fmt::print(stderr, "ENV: Trying to get variable '{}', values.size() = {}\n", name, values.size());
+
+                for (const auto &[name, value] : values) {
+                    fmt::print(stderr, "{}: {}", name, value);
+                }
+
+                return values.at(std::string{name});
             } catch (std::out_of_range& e) {
                 assert(false && "TODO: Environment::getAt");
             }
@@ -47,8 +56,9 @@ struct Environment {
     }
 
     Value get(const Token& name) {
+        spdlog::info(fmt::format("Environment: get {}", name));
         try {
-            return values.at(name.lexeme);
+            return values.at(name.getLexeme());
         } catch (std::out_of_range&) {
             assert(false && "TODO: Environment::get()");
         }
@@ -57,8 +67,9 @@ struct Environment {
     }
 
     void assign(const Token& name, const Value& value) {
-        if (values.contains(name.lexeme)) {
-            values[name.lexeme] = value;
+        spdlog::info(fmt::format("Environment: assign {} {}", name, value));
+        if (values.contains(name.getLexeme())) {
+            values[name.getLexeme()] = value;
         } else if (enclosing != nullptr) {
             enclosing->assign(name, value);
         } else {
@@ -68,8 +79,9 @@ struct Environment {
     }
 
     void assignAt(std::size_t distance, const Token& name, const Value& value) {
+        spdlog::info(fmt::format("Environment: assign at {} {} {}", distance, name, value));
         if (distance == 0) {
-            values.insert({ name.lexeme, value });
+            values.insert({ name.getLexeme(), value });
         } else {
             assert(enclosing);
             enclosing->assignAt(distance - 1, name, value);
@@ -77,7 +89,7 @@ struct Environment {
     }
 
 private:
-    using VariableName = std::string_view;
+    using VariableName = std::string;
     std::unordered_map<VariableName, Value> values;
     std::shared_ptr<Environment> enclosing { nullptr };
 };

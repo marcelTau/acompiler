@@ -245,6 +245,7 @@ auto Parser::varDeclaration() -> Result<UniqStatement> {
     std::ignore = consume(TokenType::Semicolon, "Expect ';' after variable declaration.");
 
     auto varDefinition = std::make_unique<Statements::VariableDefinition>(name.unwrap(), std::move(initializer), datatype);
+
     return Result<UniqStatement>(std::move(varDefinition));
 }
 
