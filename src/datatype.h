@@ -25,6 +25,6 @@ inline bool operator != (const DataType& lhs, const DataType& rhs) {
 
 static std::unordered_map<std::string_view, DataType> availableDataTypes {
     { "Uninitialized", { .name = "Uninitialized", .size = 0 } },
-    { "Int", { .name = "Int", .size = 4 } },
+    { "Int", { .name = "Int", .size = 8 } },
     { "Bool", { .name = "Bool", .size = 4 } },
 };

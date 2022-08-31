@@ -108,10 +108,12 @@ private:
         // push initializer value on stack
         statement.initializer->accept(*this);
 
+        current_function_stack_offset += statement.initializer->datatype.size;
+        statement.offset = current_function_stack_offset;
+
         auto idx1 = getNextFreeRegister();
         emit_line(fmt::format("  pop {}", registerNames[idx1]), "pop initializer into register");
-
-        emit_line(fmt::format("  mov [rsp - {:#x}], {}", statement.offset, registerNames[idx1]), "pop initializer into register");
+        emit_line(fmt::format("  mov QWORD [rbp - {:#x}], {}", statement.offset, registerNames[idx1]), "store initializer on stack");
 
         environment.define(statement.name.getLexeme(), std::make_shared<VariableDefinition>(statement));
         
@@ -122,10 +124,7 @@ private:
     void visit(ExpressionStatement& statement) override {
         spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
         statement.expression->accept(*this);
-
-
         assert(false);
-
     }
 
     void visit(Print& statement) override {
@@ -145,7 +144,10 @@ private:
         emit_line(fmt::format("{}:", statement.name.lexeme), "User defined function");
         emit_line("  push rbp", "save rbp since it is callee saved");
         emit_line("  mov rbp, rsp", "setup rbp to use it as the base pointer");
-        emit_line(fmt::format("  sub rsp, {}", statement.stack_size), fmt::format("reserve {} bytes on the stack", statement.stack_size));
+        emit_line(fmt::format("  sub rsp, 0x18", statement.stack_size), fmt::format("reserve {} bytes on the stack", statement.stack_size));
+
+        // @todo add size of params here
+        current_function_stack_offset = 0;
 
         for (const auto& s : statement.body) {
             s->accept(*this);
@@ -289,12 +291,21 @@ private:
         auto var = lookup_variable(expression);
 
         if (std::holds_alternative<std::shared_ptr<VariableDefinition>>(var)) {
-            std::get<std::shared_ptr<VariableDefinition>>(var)->initializer->accept(*this);
+            std::size_t offset = std::get<std::shared_ptr<VariableDefinition>>(var)->offset;
+
+            // variable is not on the stack yet
+            if (offset == -1) {
+                std::get<std::shared_ptr<VariableDefinition>>(var)->initializer->accept(*this);
+            } else {
+                auto idx1 = getNextFreeRegister();
+                emit_line(fmt::format("  mov QWORD {}, [rbp - {:#x}]", registerNames[idx1], offset), "take value of variable out of stack");
+                emit_line(fmt::format("  push {}", registerNames[idx1]), "push in onto the stack");
+                //emit_line(fmt::format("  mov rax, {}", registerNames[idx1]), "put it in rax");
+                m_registers.flip(idx1);
+            }
+        } else {
+            assert(false && "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk");
         }
-
-        //if (auto *p = dynamic_cast<Variable>
-
-        //fmt::print("{}", std::visit(ValuePrintVisitor{}, var));
     }
 
     void visit(Unary& expression) override {
@@ -343,7 +354,6 @@ private:
 
 private:
     std::size_t getNextFreeRegister() {
-        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
         for (std::size_t idx = Register::R8; idx <= Register::R15; ++idx) {
             if (!m_registers.test(idx)) {
                 m_registers.set(idx);
@@ -358,6 +368,7 @@ private:
     std::stringstream output {};
     Environment<ValueVariant> environment;
     Environment<ValueVariant> globals;
+    std::size_t current_function_stack_offset { 0 };
 };
 
 } // namespace Emitter

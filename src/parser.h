@@ -101,7 +101,7 @@ namespace Statements {
         Token name;
         std::unique_ptr<Expression> initializer;
         DataType datatype;
-        std::size_t offset { 8 };
+        int offset { -1 };
         int scope_distance { -1 };
     };
 
