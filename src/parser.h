@@ -492,6 +492,8 @@ public:
 
     [[nodiscard]] auto or_() -> Result<UniqExpression>;
     [[nodiscard]] auto and_() -> Result<UniqExpression>;
+    [[nodiscard]] auto equality() -> Result<UniqExpression>;
+    [[nodiscard]] auto comparison() -> Result<UniqExpression>;
     [[nodiscard]] auto term() -> Result<UniqExpression>;
     [[nodiscard]] auto factor() -> Result<UniqExpression>;
     [[nodiscard]] auto unary() -> Result<UniqExpression>;

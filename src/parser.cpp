@@ -334,7 +334,7 @@ auto Parser::or_() -> Result<UniqExpression> {
 }
 
 auto Parser::and_() -> Result<UniqExpression> {
-    auto expr = term();
+    auto expr = equality();
     if (!expr) {
         return expr.get_err();
     }
@@ -343,11 +343,51 @@ auto Parser::and_() -> Result<UniqExpression> {
 
     while (checkAndAdvance(TokenType::And)) {
         auto op = previous();
-        auto right = term();
+        auto right = equality();
         if (!right) {
             return right.get_err();
         }
         expr_unwrapped = std::make_unique<Expressions::Logical>(std::move(expr_unwrapped), op, right.unwrap());
+    }
+
+    return expr_unwrapped;
+}
+
+auto Parser::equality() -> Result<UniqExpression> {
+    auto expr = comparison();
+    if (!expr) {
+        return expr.get_err();
+    }
+
+    auto expr_unwrapped = expr.unwrap();
+
+    while (checkAndAdvance(TokenType::EqualEqual, TokenType::BangEqual)) {
+        auto op = previous();
+        auto right = comparison();
+        if (!right) {
+            return right.get_err();
+        }
+        expr_unwrapped = std::make_unique<Expressions::BinaryOperator>(std::move(expr_unwrapped), op, right.unwrap());
+    }
+
+    return expr_unwrapped;
+}
+
+auto Parser::comparison() -> Result<UniqExpression> {
+    auto expr = term();
+    if (!expr) {
+        return expr.get_err();
+    }
+
+    auto expr_unwrapped = expr.unwrap();
+
+    while (checkAndAdvance(TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual)) {
+        auto op = previous();
+        auto right = term();
+        if (!right) {
+            return right.get_err();
+        }
+        expr_unwrapped = std::make_unique<Expressions::BinaryOperator>(std::move(expr_unwrapped), op, right.unwrap());
     }
 
     return expr_unwrapped;
