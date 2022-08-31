@@ -672,8 +672,65 @@ TEST(parser, equality_simple_bang_equal) {
     auto datatype = DataType { .name = "Bool", .size = 8 };
     auto varDefinition = std::make_unique<Statements::VariableDefinition>(varName, std::move(varInitializer2), datatype);
     expected.push_back(std::move(varDefinition));
-    fmt::print(stderr, "#{} {}#", stmts, expected);
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
+TEST(parser, comparison_simple_less) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("let x: Bool = 1 < 2;");
+    auto stmts = p.parse(tokens);
 
+    auto varName = Token{ .type = TokenType::Identifier, .lexeme = "x", .position = { .line = 1, .column = 5 }};
+
+    auto lhs = std::make_unique<Expressions::Number>("1");
+    auto op = Token{ .type = TokenType::Less, .lexeme = "<", .position = { .line = 1, .column = 17 }};
+    auto rhs = std::make_unique<Expressions::Number>("2");
+    auto varInitializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), op, std::move(rhs));
+
+    auto datatype = DataType { .name = "Bool", .size = 8 };
+    auto varDefinition = std::make_unique<Statements::VariableDefinition>(varName, std::move(varInitializer), datatype);
+    expected.push_back(std::move(varDefinition));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, comparison_simple_greater) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("let x: Bool = 1 > 2;");
+    auto stmts = p.parse(tokens);
+
+    auto varName = Token{ .type = TokenType::Identifier, .lexeme = "x", .position = { .line = 1, .column = 5 }};
+
+    auto lhs = std::make_unique<Expressions::Number>("1");
+    auto op = Token{ .type = TokenType::Greater, .lexeme = ">", .position = { .line = 1, .column = 17 }};
+    auto rhs = std::make_unique<Expressions::Number>("2");
+    auto varInitializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), op, std::move(rhs));
+
+    auto datatype = DataType { .name = "Bool", .size = 8 };
+    auto varDefinition = std::make_unique<Statements::VariableDefinition>(varName, std::move(varInitializer), datatype);
+    expected.push_back(std::move(varDefinition));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, comparison_simple_greater_eq) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("let x: Bool = 1 >= 2;");
+    auto stmts = p.parse(tokens);
+
+    auto varName = Token{ .type = TokenType::Identifier, .lexeme = "x", .position = { .line = 1, .column = 5 }};
+
+    auto lhs = std::make_unique<Expressions::Number>("1");
+    auto op = Token{ .type = TokenType::GreaterEqual, .lexeme = ">=", .position = { .line = 1, .column = 17 }};
+    auto rhs = std::make_unique<Expressions::Number>("2");
+    auto varInitializer = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), op, std::move(rhs));
+
+    auto datatype = DataType { .name = "Bool", .size = 8 };
+    auto varDefinition = std::make_unique<Statements::VariableDefinition>(varName, std::move(varInitializer), datatype);
+    expected.push_back(std::move(varDefinition));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
