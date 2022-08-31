@@ -125,7 +125,6 @@ private:
     void visit(ExpressionStatement& statement) override {
         spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
         statement.expression->accept(*this);
-        //assert(false);
     }
 
     void visit(Print& statement) override {
@@ -161,7 +160,6 @@ private:
 
     void visit(Assignment& expression) override {
         spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
-        //assert(false);
         auto var = lookup_variable(expression);
 
         if (std::holds_alternative<std::shared_ptr<VariableDefinition>>(var)) {
