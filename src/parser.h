@@ -232,6 +232,7 @@ namespace Expressions {
     struct Bool;
     struct Variable;
     struct Unary;
+    struct Logical;
 
     struct ExpressionVisitor {
         virtual void visit(Assignment& expression) = 0;
@@ -395,18 +396,48 @@ namespace Expressions {
         }
 
         [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            //return fmt::format("UnaryExpression({}): .operator {{ {} }}, .rhs {{ {} }}", datatype.to_string(), operator_type, rhs->to_string());
             return fmt::format(
                     "{0:>{w}}UnaryExpression:\n"
                     "{0:>{w}}  .operator = {2}\n"
-                    "{0:>{w}}  .rhs = {3}\n",
+                    "{0:>{w}}  .rhs = {3}\n"
+                    "{0:>{w}}  .datatype = {4}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
-                    datatype.to_string(),
-                    rhs->to_string(offset + 4)
+                    operator_type,
+                    rhs->to_string(offset + 4),
+                    datatype.to_string()
             );
         }
 
+        Token operator_type;
+        std::unique_ptr<Expression> rhs;
+    };
+
+    struct Logical : public ExpressionAcceptor<Logical> {
+        Logical(Token operator_type, std::unique_ptr<Expression> rhs) 
+            : operator_type(operator_type)
+            , rhs(std::move(rhs))
+        {
+            datatype = this->rhs->datatype;
+        }
+
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
+            return fmt::format(
+                    "{0:>{w}}UnaryExpression:\n"
+                    "{0:>{w}}  .lhs = {2}\n"
+                    "{0:>{w}}  .operator = {3}\n"
+                    "{0:>{w}}  .rhs = {4}\n"
+                    "{0:>{w}}  .datatype = {5}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    rhs->to_string(offset + 4),
+                    operator_type,
+                    rhs->to_string(offset + 4),
+                    datatype.to_string()
+            );
+        }
+
+        std::unique_ptr<Expression> lhs;
         Token operator_type;
         std::unique_ptr<Expression> rhs;
     };
