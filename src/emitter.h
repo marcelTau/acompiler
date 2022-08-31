@@ -59,6 +59,7 @@ private:
     void visit(Statements::Print&               statement) override;
     void visit(Statements::Return&              statement) override;
     void visit(Statements::Function&            statement) override;
+    void visit(Statements::IfStatement&         statement) override;
 
     // ------------------------------------------------------------------------
     // Expressions
@@ -69,6 +70,7 @@ private:
     void visit(Expressions::Bool&               expression) override;
     void visit(Expressions::Variable&           expression) override;
     void visit(Expressions::Unary&              expression) override;
+    void visit(Expressions::Logical&            expression) override;
 
     // ------------------------------------------------------------------------
     // Helper Functions

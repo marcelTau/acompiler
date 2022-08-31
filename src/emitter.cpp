@@ -8,6 +8,11 @@ Emitter::Emitter(std::string filepath)
 {
 }
 
+void Emitter::Emitter::visit(IfStatement& /* statement */) {
+    spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+    assert(false && "If statement");
+}
+
 void Emitter::Emitter::visit(VariableDefinition& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
 
@@ -199,6 +204,12 @@ void Emitter::visit(Variable& expression) {
 
 void Emitter::visit(Unary& /* expression */) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+    assert(false && "unary");
+}
+
+void Emitter::visit(Logical& /* expression */) {
+    spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+    assert(false && "logical");
 }
 
 // ----------------------------------------------------------------------------

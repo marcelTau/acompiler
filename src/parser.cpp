@@ -290,7 +290,7 @@ auto Parser::expression() -> Result<UniqExpression> {
 }
 
 auto Parser::assignment() -> Result<UniqExpression> {
-    auto expr = term();
+    auto expr = or_();
 
     if (!expr) {
         return expr.get_err();
@@ -311,6 +311,46 @@ auto Parser::assignment() -> Result<UniqExpression> {
         return Result<UniqExpression>(std::move(assignment));
     }
     return expr;
+}
+
+auto Parser::or_() -> Result<UniqExpression> {
+    auto expr = and_();
+    if (!expr) {
+        return expr.get_err();
+    }
+
+    auto expr_unwrapped = expr.unwrap();
+
+    while (checkAndAdvance(TokenType::Or)) {
+        auto op = previous();
+        auto right = and_();
+        if (!right) {
+            return right.get_err();
+        }
+        expr_unwrapped = std::make_unique<Expressions::Logical>(std::move(expr_unwrapped), op, right.unwrap());
+    }
+
+    return expr_unwrapped;
+}
+
+auto Parser::and_() -> Result<UniqExpression> {
+    auto expr = term();
+    if (!expr) {
+        return expr.get_err();
+    }
+
+    auto expr_unwrapped = expr.unwrap();
+
+    while (checkAndAdvance(TokenType::And)) {
+        auto op = previous();
+        auto right = term();
+        if (!right) {
+            return right.get_err();
+        }
+        expr_unwrapped = std::make_unique<Expressions::Logical>(std::move(expr_unwrapped), op, right.unwrap());
+    }
+
+    return expr_unwrapped;
 }
 
 auto Parser::term() -> Result<UniqExpression> {

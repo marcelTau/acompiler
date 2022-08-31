@@ -47,6 +47,7 @@ namespace Statements {
         virtual void visit(Print& statement) = 0;
         virtual void visit(Function& statement) = 0;
         virtual void visit(Return& statement) = 0;
+        virtual void visit(IfStatement& statement) = 0;
         virtual ~StatementVisitor() = default;
     };
 
@@ -172,7 +173,6 @@ namespace Statements {
         std::vector<std::unique_ptr<Statement>> body;
         std::size_t stack_size { 0 };
         DataType return_datatype;
-        //std::shared_ptr<Environment> environment;
     };
 
     struct Return : public StatementAcceptor<Return> {
@@ -182,7 +182,6 @@ namespace Statements {
         }
 
         [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            //return fmt::format("Return: .value {{ {} }}", value ? value->to_string() : "nullptr");
             return fmt::format(
                     "{0:>{w}}Return:\n"
                     "{0:>{w}}  .value =\n{2}\n",
@@ -203,7 +202,6 @@ namespace Statements {
         {}
 
         [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            //return fmt::format("Return: .value {{ {} }}", value ? value->to_string() : "nullptr");
             return fmt::format(
                     "{0:>{w}}IfStatement:\n"
                     "{0:>{w}}  .condition =\n{2}\n"
@@ -241,6 +239,7 @@ namespace Expressions {
         virtual void visit(Bool& expression) = 0;
         virtual void visit(Variable& expression) = 0;
         virtual void visit(Unary& expression) = 0;
+        virtual void visit(Logical& expression) = 0;
     };
 
     template<typename T>
@@ -399,7 +398,7 @@ namespace Expressions {
             return fmt::format(
                     "{0:>{w}}UnaryExpression:\n"
                     "{0:>{w}}  .operator = {2}\n"
-                    "{0:>{w}}  .rhs = {3}\n"
+                    "{0:>{w}}  .rhs = \n{3}\n"
                     "{0:>{w}}  .datatype = {4}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
@@ -414,19 +413,20 @@ namespace Expressions {
     };
 
     struct Logical : public ExpressionAcceptor<Logical> {
-        Logical(Token operator_type, std::unique_ptr<Expression> rhs) 
-            : operator_type(operator_type)
+        Logical(std::unique_ptr<Expression> lhs, Token operator_type, std::unique_ptr<Expression> rhs) 
+            : lhs(std::move(lhs))
+            , operator_type(operator_type)
             , rhs(std::move(rhs))
         {
-            datatype = this->rhs->datatype;
+            datatype = availableDataTypes["Bool"];
         }
 
         [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             return fmt::format(
-                    "{0:>{w}}UnaryExpression:\n"
-                    "{0:>{w}}  .lhs = {2}\n"
+                    "{0:>{w}}LogicalExpression:\n"
+                    "{0:>{w}}  .lhs = \n{2}\n"
                     "{0:>{w}}  .operator = {3}\n"
-                    "{0:>{w}}  .rhs = {4}\n"
+                    "{0:>{w}}  .rhs = \n{4}\n"
                     "{0:>{w}}  .datatype = {5}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
@@ -490,6 +490,8 @@ public:
     [[nodiscard]] auto expression() -> Result<UniqExpression>;
     [[nodiscard]] auto assignment() -> Result<UniqExpression>;
 
+    [[nodiscard]] auto or_() -> Result<UniqExpression>;
+    [[nodiscard]] auto and_() -> Result<UniqExpression>;
     [[nodiscard]] auto term() -> Result<UniqExpression>;
     [[nodiscard]] auto factor() -> Result<UniqExpression>;
     [[nodiscard]] auto unary() -> Result<UniqExpression>;

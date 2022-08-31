@@ -515,3 +515,43 @@ TEST(parser, new_variable_assignment_with_type_annotation_IMPORTANT) {
     expected.push_back(std::move(exprStatement));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
+
+TEST(parser, logical_or_simple) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("let x: Bool = 1 or 2;");
+    auto stmts = p.parse(tokens);
+
+    auto varName = Token{ .type = TokenType::Identifier, .lexeme = "x", .position = { .line = 1, .column = 5 }};
+
+    auto lhs = std::make_unique<Expressions::Number>("1");
+    auto op = Token{ .type = TokenType::Or, .lexeme = "or", .position = { .line = 1, .column = 18 }};
+    auto rhs = std::make_unique<Expressions::Number>("2");
+    auto varInitializer = std::make_unique<Expressions::Logical>(std::move(lhs), op, std::move(rhs));
+
+    auto datatype = DataType { .name = "Bool", .size = 8 };
+    auto varDefinition = std::make_unique<Statements::VariableDefinition>(varName, std::move(varInitializer), datatype);
+    expected.push_back(std::move(varDefinition));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, logical_and_simple) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("let x: Bool = 1 and 2;");
+    auto stmts = p.parse(tokens);
+
+    auto varName = Token{ .type = TokenType::Identifier, .lexeme = "x", .position = { .line = 1, .column = 5 }};
+
+    auto lhs = std::make_unique<Expressions::Number>("1");
+    auto op = Token{ .type = TokenType::And, .lexeme = "and", .position = { .line = 1, .column = 19 }};
+    auto rhs = std::make_unique<Expressions::Number>("2");
+    auto varInitializer = std::make_unique<Expressions::Logical>(std::move(lhs), op, std::move(rhs));
+
+    auto datatype = DataType { .name = "Bool", .size = 8 };
+    auto varDefinition = std::make_unique<Statements::VariableDefinition>(varName, std::move(varInitializer), datatype);
+    expected.push_back(std::move(varDefinition));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}

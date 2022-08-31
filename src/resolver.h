@@ -246,6 +246,16 @@ struct Resolver
         }
     }
 
+    void visit(IfStatement& statement) override {
+        spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
+        // @todo maybe todo something here
+        resolve(statement.condition);
+        resolve(statement.then_branch);
+        if (statement.else_branch) {
+            resolve(statement.else_branch);
+        }
+    }
+
     // ====================================================================
     // Expressions
     // ====================================================================
@@ -289,6 +299,12 @@ struct Resolver
 
     void visit(Unary& expression) override {
         spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
+        resolve(expression.rhs);
+    }
+
+    void visit(Logical& expression) override {
+        spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
+        resolve(expression.lhs);
         resolve(expression.rhs);
     }
 private:
