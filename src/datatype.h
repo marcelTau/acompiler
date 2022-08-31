@@ -9,7 +9,7 @@ struct DataType {
     std::string name { "Uninitalized" };
     std::size_t size { 0 };
 
-    std::string to_string() {
+    [[nodiscard ]] std::string to_string() const {
         return fmt::format("DataType: .name {{ {} }}, .size {{ {} }}", name, size);
     }
 

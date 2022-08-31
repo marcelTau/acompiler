@@ -30,9 +30,6 @@ struct Resolver
              Statements::StatementVisitor 
 {
     Resolver() = default;
-    //Resolver() {
-        //locals.insert({ Token{}, -1 });
-    //}
 
     void error(const Token& name, std::string_view message) {
         std::string smsg(message);
@@ -91,14 +88,12 @@ struct Resolver
     // Resolves
     // ====================================================================
 
-    std::unordered_map<Value, std::size_t> resolve(const StatementList& statements) {
+    void resolve(const StatementList& statements) {
         spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
 
         for (const auto& statement : statements) {
             resolve(statement);
         }
-
-        return locals;
     }
 
     void resolve(const std::unique_ptr<Expression>& expression) {
@@ -129,19 +124,32 @@ struct Resolver
         statement->accept(*this);
     }
 
-    void resolve(std::shared_ptr<Variable> value, const Token& name) {
+    void resolve(Variable& value, const Token& name) {
         spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
         std::size_t depth = 0;
 
         // iterate over the scopes in reverse
         for (const auto& map : scopes | std::views::reverse) {
-            //spdlog::info(fmt::format("-- Resolver: {}"));
-
             // if the map contains the name of the variable, count the depth and add it to the locals
             if (map.contains(name.lexeme)) {
-                //if (std::is_same_v<decltype(expr), 
-                locals.insert({ value->name, depth });
-                spdlog::info(fmt::format("-- Insert into locals with {}:{}", value->to_string(), depth));
+                // if we want to resolve a local just set the scope_distance value
+                value.scope_distance = depth;
+                return;
+            }
+            depth++;
+        }
+    }
+
+    void resolve(Assignment& value, const Token& name) {
+        spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
+        std::size_t depth = 0;
+
+        // iterate over the scopes in reverse
+        for (const auto& map : scopes | std::views::reverse) {
+            // if the map contains the name of the variable, count the depth and add it to the locals
+            if (map.contains(name.lexeme)) {
+                // if we want to resolve a local just set the scope_distance value
+                value.scope_distance = depth;
                 return;
             }
             depth++;
@@ -208,7 +216,8 @@ struct Resolver
 
     void visit(ExpressionStatement& statement) override {
         spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
-        assert(false && "TODO resolver");
+        resolve(statement.expression);
+        //assert(false && "TODO resolver");
     }
 
     void visit(Print& statement) override {
@@ -245,6 +254,10 @@ struct Resolver
 
     void visit(Assignment& expression) override {
         spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
+        resolve(expression.value);
+        resolve(expression, expression.name);
+        //self.resolve_expr(expr.value.clone())?;
+        //self.resolve_local(wrapper, &expr.name);
     }
 
 
@@ -274,7 +287,7 @@ struct Resolver
         if (isNotEmpty && isDeclared) {
             error(expression.name, fmt::format("Can't read variable '{}' in it's own initializer.", expression.name.lexeme));
         } else {
-            resolve(std::make_shared<Variable>(expression), expression.name);
+            resolve(expression, expression.name);
         }
     }
 
@@ -287,7 +300,7 @@ private:
 
     std::vector<std::unordered_map<VariableName, State>> scopes;
     FunctionType current_function { FunctionType::None };
-    std::unordered_map<Value, std::size_t> locals;
+    //std::unordered_map<ValueVariant, std::size_t> locals;
 };
 
 } // namespace Resolver

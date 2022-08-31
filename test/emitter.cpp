@@ -24,123 +24,123 @@ std::string run_file(std::string_view filepath) {
     }
     return ret;
 }
-static inline std::unordered_map<Value, std::size_t> test;
-TEST(emitter, return_single) {
-    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
-    auto filepathasm = filepath + ".asm";
-    Scanner s;
-    Parser p;
-    Emitter::Emitter e(filepathasm, test);
+//static inline std::unordered_map<Value, std::size_t> test;
+//TEST(emitter, return_single) {
+    //std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    //auto filepathasm = filepath + ".asm";
+    //Scanner s;
+    //Parser p;
+    //Emitter::Emitter e(filepathasm, test);
 
-    auto code = R"(
-fun main() -> Int
-    return 12;
-end
-)";
+    //auto code = R"(
+//fun main() -> Int
+    //return 12;
+//end
+//)";
 
-    e.emit(p.parse(s.scan(code)));
+    //e.emit(p.parse(s.scan(code)));
 
-    EXPECT_EQ(run_file(filepath), "12");
-}
+    //EXPECT_EQ(run_file(filepath), "12");
+//}
 
-TEST(emitter, return_addition) {
-    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
-    auto filepathasm = filepath + ".asm";
-    Scanner s;
-    Parser p;
-    Emitter::Emitter e(filepathasm, test);
+//TEST(emitter, return_addition) {
+    //std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    //auto filepathasm = filepath + ".asm";
+    //Scanner s;
+    //Parser p;
+    //Emitter::Emitter e(filepathasm, test);
 
-    auto code = R"(
-fun main() -> Int
-    return 12 + 5;
-end
-)";
+    //auto code = R"(
+//fun main() -> Int
+    //return 12 + 5;
+//end
+//)";
 
-    e.emit(p.parse(s.scan(code)));
-    EXPECT_EQ(run_file(filepath), "17");
-}
+    //e.emit(p.parse(s.scan(code)));
+    //EXPECT_EQ(run_file(filepath), "17");
+//}
 
-TEST(emitter, return_subtraction) {
-    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
-    auto filepathasm = filepath + ".asm";
-    Scanner s;
-    Parser p;
-    Emitter::Emitter e(filepathasm, test);
+//TEST(emitter, return_subtraction) {
+    //std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    //auto filepathasm = filepath + ".asm";
+    //Scanner s;
+    //Parser p;
+    //Emitter::Emitter e(filepathasm, test);
 
-    auto code = R"(
-fun main() -> Int
-    return 12 - 5;
-end
-)";
+    //auto code = R"(
+//fun main() -> Int
+    //return 12 - 5;
+//end
+//)";
 
-    e.emit(p.parse(s.scan(code)));
-    EXPECT_EQ(run_file(filepath), "7");
-}
+    //e.emit(p.parse(s.scan(code)));
+    //EXPECT_EQ(run_file(filepath), "7");
+//}
 
-TEST(emitter, return_add_sub) {
-    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
-    auto filepathasm = filepath + ".asm";
-    Scanner s;
-    Parser p;
-    Emitter::Emitter e(filepathasm, test);
+//TEST(emitter, return_add_sub) {
+    //std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    //auto filepathasm = filepath + ".asm";
+    //Scanner s;
+    //Parser p;
+    //Emitter::Emitter e(filepathasm, test);
 
-    auto code = R"(
-fun main() -> Int
-    return 1 + 12 - 5 + 10;
-end
-)";
+    //auto code = R"(
+//fun main() -> Int
+    //return 1 + 12 - 5 + 10;
+//end
+//)";
 
-    e.emit(p.parse(s.scan(code)));
-    EXPECT_EQ(run_file(filepath), "18");
-}
+    //e.emit(p.parse(s.scan(code)));
+    //EXPECT_EQ(run_file(filepath), "18");
+//}
 
-TEST(emitter, return_mixed) {
-    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
-    auto filepathasm = filepath + ".asm";
-    Scanner s;
-    Parser p;
-    Emitter::Emitter e(filepathasm, test);
+//TEST(emitter, return_mixed) {
+    //std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    //auto filepathasm = filepath + ".asm";
+    //Scanner s;
+    //Parser p;
+    //Emitter::Emitter e(filepathasm, test);
 
-    auto code = R"(
-fun main() -> Int
-    return 2 + 3 * 3 - 1;
-end
-)";
+    //auto code = R"(
+//fun main() -> Int
+    //return 2 + 3 * 3 - 1;
+//end
+//)";
 
-    e.emit(p.parse(s.scan(code)));
-    EXPECT_EQ(run_file(filepath), "10");
-}
+    //e.emit(p.parse(s.scan(code)));
+    //EXPECT_EQ(run_file(filepath), "10");
+//}
 
-TEST(emitter, return_division) {
-    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
-    auto filepathasm = filepath + ".asm";
-    Scanner s;
-    Parser p;
-    Emitter::Emitter e(filepathasm, test);
+//TEST(emitter, return_division) {
+    //std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    //auto filepathasm = filepath + ".asm";
+    //Scanner s;
+    //Parser p;
+    //Emitter::Emitter e(filepathasm, test);
 
-    auto code = R"(
-fun main() -> Int
-    return 15 / 5;
-end
-)";
+    //auto code = R"(
+//fun main() -> Int
+    //return 15 / 5;
+//end
+//)";
 
-    e.emit(p.parse(s.scan(code)));
-    EXPECT_EQ(run_file(filepath), "3");
-}
+    //e.emit(p.parse(s.scan(code)));
+    //EXPECT_EQ(run_file(filepath), "3");
+//}
 
-TEST(emitter, return_precedence_check) {
-    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
-    auto filepathasm = filepath + ".asm";
-    Scanner s;
-    Parser p;
-    Emitter::Emitter e(filepathasm, test);
+//TEST(emitter, return_precedence_check) {
+    //std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    //auto filepathasm = filepath + ".asm";
+    //Scanner s;
+    //Parser p;
+    //Emitter::Emitter e(filepathasm, test);
 
-    auto code = R"(
-fun main() -> Int
-    return 15 + 5 * 2 - 9 / 3;
-end
-)";
+    //auto code = R"(
+//fun main() -> Int
+    //return 15 + 5 * 2 - 9 / 3;
+//end
+//)";
 
-    e.emit(p.parse(s.scan(code)));
-    EXPECT_EQ(run_file(filepath), "22");
-}
+    //e.emit(p.parse(s.scan(code)));
+    //EXPECT_EQ(run_file(filepath), "22");
+//}

@@ -1,11 +1,14 @@
 #pragma once
 
-#include "environment.h"
+//#include "environment.h"
 #include "error.h"
 #include "resolver.h"
 #include "scanner.h"
 #include "parser.h"
-#include "emitter.h"
+//#include "emitter.h"
+
+#include <istream>
+#include <iostream>
 
 struct Compiler {
     Compiler() = default;
@@ -46,21 +49,25 @@ struct Compiler {
         // @todo if parser is OK
         //auto resolver = Resovler::Resolver;
 
-        //Resovler::Resolver resolver;
+        Resovler::Resolver resolver;
 
 
-        //try {
-            //locals = resolver.resolve(statements);
-        //} catch (Error& e) {
-            //spdlog::error(fmt::format("Resolver failed on token: {}", e.token));
-            //return 1;
-        //}
+        try {
+            resolver.resolve(statements);
+        } catch (Error& e) {
+            spdlog::error(fmt::format("Resolver failed on token: {}", e.token));
+            return 1;
+        }
+
+        for (const auto& statement : statements) {
+            fmt::print("{}\n", statement->to_string());
+        }
 
         //spdlog::info(fmt::format("Resolver done with {} locals", locals.size()));
 
 
-        //for (const auto &[expr, depth] : locals) {
-            //fmt::print("[ {}  --  {} ]\n", expr, depth);
+        //for (auto &[expr, depth] : locals) {
+            //fmt::print("[ {}  --  {} ]\n", std::visit(ValuePrintVisitor{}, expr), depth);
         //}
 
         //Emitter::Emitter e("testoutput.asm", locals);
@@ -69,9 +76,8 @@ struct Compiler {
         return 0;
     }
 
-
 private:
-    Environment environment;
-    Environment globals;
-    std::unordered_map<Value, std::size_t> locals;
+    //Environment<ValueVariant> environment;
+    //Environment<ValueVariant> globals;
+    //std::unordered_map<ValueVariant, std::size_t> locals;
 };

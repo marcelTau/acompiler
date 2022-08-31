@@ -13,7 +13,9 @@
 #include "error.h"
 #include "datatype.h"
 
+template <typename Value>
 struct Environment;
+
 
 /// @todo ugly hacky stuff, try to fix this pls
 namespace Expressions {
@@ -21,7 +23,7 @@ namespace Expressions {
     struct Expression {
         virtual ~Expression() = default;
         virtual void accept(ExpressionVisitor& visitor) = 0;
-        virtual std::string to_string(std::size_t offset = 0) = 0;
+        [[nodiscard]] virtual std::string to_string(std::size_t offset = 0) const = 0;
 
         DataType datatype {};
     };
@@ -49,7 +51,7 @@ namespace Statements {
     struct Statement {
         virtual ~Statement() = default;
         virtual void accept(StatementVisitor& visitor) = 0;
-        virtual std::string to_string(std::size_t offset = 0) = 0;
+        [[nodiscard]] virtual std::string to_string(std::size_t offset = 0) const = 0;
     };
 
     template<typename T>
@@ -68,7 +70,7 @@ namespace Statements {
         {
         }
 
-        std::string to_string(std::size_t offset = 0) final {
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             return fmt::format(
                     "{0:>{w}}VariableDefinition:\n"
                     "{0:>{w}}  .name = {2}\n"
@@ -80,14 +82,13 @@ namespace Statements {
                     initializer ? initializer->to_string(offset + 4) : "nullptr",
                     datatype.to_string()
             );
-
         }
 
         Token name;
         std::unique_ptr<Expression> initializer;
         DataType datatype;
         std::size_t offset { 8 };
-        std::size_t scope_distance { 0 };
+        int scope_distance { -1 };
     };
 
     struct ExpressionStatement : public StatementAcceptor<ExpressionStatement> {
@@ -96,7 +97,7 @@ namespace Statements {
         {
         }
 
-        std::string to_string(std::size_t offset = 0) final {
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             return fmt::format(
                     "{0:>{w}}ExpressionStatement:\n"
                     "{0:>{w}}  .expression =\n{2}\n",
@@ -115,7 +116,7 @@ namespace Statements {
         {
         }
 
-        std::string to_string(std::size_t offset = 0) final {
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             return fmt::format("PrintStatement: .expression {{ {} }}", expression->to_string());
         }
 
@@ -132,17 +133,12 @@ namespace Statements {
             //stack_size = params.size() * 4; // @todo for now assume that every datatype use 4 bytes and don't care about local variables
         }
 
-        std::string to_string(std::size_t offset = 0) final {
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             std::stringstream ss{};
 
-            for (const auto& statement : body) {
+            for (auto& statement : body) {
                 ss << statement->to_string(offset + 4);
             }
-
-            //return fmt::format(
-                //"FunctionStatement({}): .name {{ {} }}, .params {{ {} }}, .body {{ {} }}",
-                //return_datatype.to_string(), name, fmt::join(params, ", "), ss.str());
-
 
             return fmt::format(
                     "{0:>{w}}FunctionStatement:\n"
@@ -164,7 +160,7 @@ namespace Statements {
         std::vector<std::unique_ptr<Statement>> body;
         std::size_t stack_size { 0 };
         DataType return_datatype;
-        std::shared_ptr<Environment> environment;
+        //std::shared_ptr<Environment> environment;
     };
 
     struct Return : public StatementAcceptor<Return> {
@@ -173,7 +169,7 @@ namespace Statements {
         {
         }
 
-        std::string to_string(std::size_t offset = 0) final {
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             //return fmt::format("Return: .value {{ {} }}", value ? value->to_string() : "nullptr");
             return fmt::format(
                     "{0:>{w}}Return:\n"
@@ -221,20 +217,23 @@ namespace Expressions {
         {
         }
 
-        std::string to_string(std::size_t offset = 0) final {
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             return fmt::format(
                     "{0:>{w}}Assignment:\n"
                     "{0:>{w}}  .name = {2}\n"
-                    "{0:>{w}}  .value =\n{3}\n",
+                    "{0:>{w}}  .value =\n{3}\n"
+                    "{0:>{w}}  .scope_distance = {4}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
                     name,
-                    value ? value->to_string(offset + 4) : "nullptr"
+                    value ? value->to_string(offset + 4) : "nullptr",
+                    scope_distance
             );
         }
 
         Token name;
         std::unique_ptr<Expression> value;
+        int scope_distance { -1 };
     };
 
     struct BinaryOperator : public ExpressionAcceptor<BinaryOperator> {
@@ -248,7 +247,7 @@ namespace Expressions {
             // their actual datatype
         }
 
-        std::string to_string(std::size_t offset = 0) final {
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             return fmt::format(
                     "{0:>{w}}BinaryOperator:\n"
                     "{0:>{w}}  .datatype = {2}\n"
@@ -283,7 +282,7 @@ namespace Expressions {
             this->datatype = other.datatype;
         }
 
-        std::string to_string(std::size_t offset = 0) final {
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             //return fmt::format("NumberExpression({}): .value {{ {} }}", datatype.to_string(), value);
             return fmt::format(
                     "{0:>{w}}NumberExpression:\n"
@@ -306,7 +305,7 @@ namespace Expressions {
             datatype = availableDataTypes.at("Bool");
         }
 
-        std::string to_string(std::size_t offset = 0) final {
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             //return fmt::format("BoolExpression({}): .value {{ {} }}", datatype.to_string(), value ? "true" : "false");
             return fmt::format(
                     "{0:>{w}}BoolExpression:\n"
@@ -330,19 +329,22 @@ namespace Expressions {
             // This will probably change when scopes are implemented and we can lookup the variable and get it's type
         }
 
-        std::string to_string(std::size_t offset = 0) final {
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             //return fmt::format("VariableExpression({}): .name {{ {} }}", datatype.to_string(), name);
             return fmt::format(
                     "{0:>{w}}Variable:\n"
                     "{0:>{w}}  .name = {2}\n"
-                    "{0:>{w}}  .datatype = {3}\n",
+                    "{0:>{w}}  .datatype = {3}\n"
+                    "{0:>{w}}  .scope_distance = {4}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
                     name,
-                    datatype.to_string()
+                    datatype.to_string(),
+                    scope_distance
             );
         }
         Token name;
+        int scope_distance { -1 };
     };
 
     struct Unary : public ExpressionAcceptor<Unary> {
@@ -353,7 +355,7 @@ namespace Expressions {
             datatype = this->rhs->datatype;
         }
 
-        std::string to_string(std::size_t offset = 0) final {
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             //return fmt::format("UnaryExpression({}): .operator {{ {} }}, .rhs {{ {} }}", datatype.to_string(), operator_type, rhs->to_string());
             return fmt::format(
                     "{0:>{w}}UnaryExpression:\n"
