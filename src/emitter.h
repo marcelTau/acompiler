@@ -5,52 +5,50 @@
 #include <fstream>
 #include <bitset>
 
-namespace Emitter {
-
-enum Register {
-    RAX,
-    RBX,
-    RCX,
-    RDX,
-    RSP,
-    RBP,
-    RSI,
-    RDI,
-    R8,
-    R9,
-    R10,
-    R11,
-    R12,
-    R13,
-    R14,
-    R15,
-    MAX_COUNT,
-};
-
-static constexpr std::array registerNames {
-    "rax",
-    "rbx",
-    "rcx",
-    "rdx",
-    "rsp",
-    "rbp",
-    "rsi",
-    "rdi",
-    "r8",
-    "r9",
-    "r10",
-    "r11",
-    "r12",
-    "r13",
-    "r14",
-    "r15",
-    "MAX_COUNT",
-};
-
 struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVisitor {
     using StatementList = std::vector<std::unique_ptr<Statements::Statement>>;
     Emitter(std::string filepath);
     void emit(const StatementList& statements);
+
+    enum Register {
+        RAX,
+        RBX,
+        RCX,
+        RDX,
+        RSP,
+        RBP,
+        RSI,
+        RDI,
+        R8,
+        R9,
+        R10,
+        R11,
+        R12,
+        R13,
+        R14,
+        R15,
+        MAX_COUNT,
+    };
+
+    static constexpr std::array registerNames {
+        "rax",
+        "rbx",
+        "rcx",
+        "rdx",
+        "rsp",
+        "rbp",
+        "rsi",
+        "rdi",
+        "r8",
+        "r9",
+        "r10",
+        "r11",
+        "r12",
+        "r13",
+        "r14",
+        "r15",
+        "MAX_COUNT",
+    };
 
 private:
     // ------------------------------------------------------------------------
@@ -90,5 +88,3 @@ private:
     Environment<ValueVariant> globals;
     int current_function_stack_offset { 0 };
 };
-
-} // namespace Emitter

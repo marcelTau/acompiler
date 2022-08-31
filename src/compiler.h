@@ -44,12 +44,7 @@ struct Compiler {
             fmt::print("{}\n", statement->to_string());
         }
 
-
-        // @todo if parser is OK
-        //auto resolver = Resovler::Resolver;
-
         Resovler::Resolver resolver;
-
 
         try {
             resolver.resolve(statements);
@@ -62,14 +57,7 @@ struct Compiler {
             fmt::print("{}\n", statement->to_string());
         }
 
-        //spdlog::info(fmt::format("Resolver done with {} locals", locals.size()));
-
-
-        //for (auto &[expr, depth] : locals) {
-            //fmt::print("[ {}  --  {} ]\n", std::visit(ValuePrintVisitor{}, expr), depth);
-        //}
-
-        Emitter::Emitter e("testoutput.asm");
+        Emitter e("testoutput.asm");
         e.emit(statements);
 
         return 0;

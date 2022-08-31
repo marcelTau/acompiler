@@ -33,7 +33,7 @@ TEST(emitter, return_single) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -51,7 +51,7 @@ TEST(emitter, return_addition) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -68,7 +68,7 @@ TEST(emitter, return_subtraction) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -85,7 +85,7 @@ TEST(emitter, return_add_sub) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -102,7 +102,7 @@ TEST(emitter, return_mixed) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -119,7 +119,7 @@ TEST(emitter, return_division) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -136,7 +136,7 @@ TEST(emitter, return_precedence_check) {
     auto filepathasm = filepath + ".asm";
     Scanner s;
     Parser p;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -154,7 +154,7 @@ TEST(emitter, return_single_variable) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -176,7 +176,7 @@ TEST(emitter, return_single_variable_plus_number) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -198,7 +198,7 @@ TEST(emitter, return_single_variable_with_precednece_check) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -220,7 +220,7 @@ TEST(emitter, return_multiple_variables_simple) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -243,7 +243,7 @@ TEST(emitter, return_multiple_variables_precedence) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -267,7 +267,7 @@ TEST(emitter, return_variable_with_assignment) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -290,7 +290,7 @@ TEST(emitter, return_variable_with_multiple_assignments) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -314,7 +314,7 @@ TEST(emitter, return_variable_with_multiple_assignments_with_addition) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -337,7 +337,7 @@ TEST(emitter, return_incremented_variable) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -360,7 +360,7 @@ TEST(emitter, return_multiple_variables_assignment_addition) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -383,7 +383,7 @@ TEST(emitter, return_multiple_variables_assignment_multiplication) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -406,7 +406,7 @@ TEST(emitter, return_multiple_variables_assignment_with_precedence_check) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int
@@ -430,7 +430,7 @@ TEST(emitter, return_variable_assignment_with_other_variable) {
     Scanner s;
     Parser p;
     Resolver r;
-    Emitter::Emitter e(filepathasm);
+    Emitter e(filepathasm);
 
     auto code = R"(
 fun main() -> Int

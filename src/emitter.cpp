@@ -2,9 +2,8 @@
 
 using namespace Statements;
 using namespace Expressions;
-using namespace Emitter;
 
-Emitter::Emitter::Emitter(std::string filepath)
+Emitter::Emitter(std::string filepath)
     : filepath(std::move(filepath))
 {
 }
@@ -28,22 +27,22 @@ void Emitter::Emitter::visit(VariableDefinition& statement) {
     m_registers.flip(idx1);
 }
 
-void Emitter::Emitter::visit(ExpressionStatement& statement) {
+void Emitter::visit(ExpressionStatement& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     statement.expression->accept(*this);
 }
 
-void Emitter::Emitter::visit(Print&  /*statement*/) {
+void Emitter::visit(Print&  /*statement*/) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
 }
 
-void Emitter::Emitter::visit(Return& statement) {
+void Emitter::visit(Return& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     statement.value->accept(*this);
     emit_line("  pop rax", "pop result of binary expression into rax");
 }
 
-void Emitter::Emitter::visit(Function& statement) {
+void Emitter::visit(Function& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     // @todo pretty print the params of the function as comment above
     emit_line("");
@@ -64,7 +63,7 @@ void Emitter::Emitter::visit(Function& statement) {
     emit_line("  ret");
 }
 
-void Emitter::Emitter::visit(Assignment& expression) {
+void Emitter::visit(Assignment& expression) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     auto var = lookup_variable(expression);
 
@@ -84,7 +83,7 @@ void Emitter::Emitter::visit(Assignment& expression) {
     spdlog::info(fmt::format("Done: Emitter: {}", __PRETTY_FUNCTION__));
 }
 
-void Emitter::Emitter::visit(BinaryOperator& expression) {
+void Emitter::visit(BinaryOperator& expression) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     // recursivly push lhs on stack
     expression.lhs->accept(*this);
@@ -165,16 +164,16 @@ void Emitter::Emitter::visit(BinaryOperator& expression) {
     };
 }
 
-void Emitter::Emitter::visit(Number& expression) {
+void Emitter::visit(Number& expression) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     emit_line(fmt::format("  push {}", expression.value), "push value on stack");
 }
 
-void Emitter::Emitter::visit(Bool& /* expression */) {
+void Emitter::visit(Bool& /* expression */) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
 }
 
-void Emitter::Emitter::visit(Variable& expression) {
+void Emitter::visit(Variable& expression) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     // make lookup to get the right variable with the correct offset
     auto var = lookup_variable(expression);
@@ -197,7 +196,7 @@ void Emitter::Emitter::visit(Variable& expression) {
     }
 }
 
-void Emitter::Emitter::visit(Unary& /* expression */) {
+void Emitter::visit(Unary& /* expression */) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
 }
 
@@ -205,7 +204,7 @@ void Emitter::Emitter::visit(Unary& /* expression */) {
 // Helper Functions
 // ----------------------------------------------------------------------------
 
-ValueVariant Emitter::Emitter::lookup_variable(const Variable& var) {
+ValueVariant Emitter::lookup_variable(const Variable& var) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
 
     try {
@@ -219,7 +218,7 @@ ValueVariant Emitter::Emitter::lookup_variable(const Variable& var) {
     }
 }
 
-ValueVariant Emitter::Emitter::lookup_variable(const Assignment& var) {
+ValueVariant Emitter::lookup_variable(const Assignment& var) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     try {
         const auto distance = var.scope_distance;
@@ -232,7 +231,7 @@ ValueVariant Emitter::Emitter::lookup_variable(const Assignment& var) {
     }
 }
 
-void Emitter::Emitter::emit(const StatementList& statements) {
+void Emitter::emit(const StatementList& statements) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     emit_line("", "=== Auto-generated code ===");
 
@@ -259,16 +258,16 @@ void Emitter::Emitter::emit(const StatementList& statements) {
     file.close();
 }
 
-void Emitter::Emitter::emit_line(std::string_view line, std::string_view comment) {
+void Emitter::emit_line(std::string_view line, std::string_view comment) {
     output << fmt::format("{:30}; {}\n", line, comment);
 }
 
-void Emitter::Emitter::emit_statement(const std::unique_ptr<Statement>& statement) {
+void Emitter::emit_statement(const std::unique_ptr<Statement>& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     statement->accept(*this);
 }
 
-std::size_t Emitter::Emitter::getNextFreeRegister() {
+std::size_t Emitter::getNextFreeRegister() {
     for (std::size_t idx = Register::R8; idx <= Register::R15; ++idx) {
         if (!m_registers.test(idx)) {
             m_registers.set(idx);
