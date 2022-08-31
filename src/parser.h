@@ -21,6 +21,7 @@ struct Environment;
 namespace Expressions {
     struct ExpressionVisitor;
     struct Expression {
+        Expression() = default;
         virtual ~Expression() = default;
         virtual void accept(ExpressionVisitor& visitor) = 0;
         [[nodiscard]] virtual std::string to_string(std::size_t offset = 0) const = 0;
@@ -69,6 +70,19 @@ namespace Statements {
             , datatype(std::move(data_type))
         {
         }
+
+        VariableDefinition(VariableDefinition& other)
+            : name(other.name)
+            , initializer { std::move(other.initializer) }
+            , datatype(other.datatype)
+            , offset(other.offset)
+            , scope_distance(other.scope_distance)
+        {
+            //this->initializer.swap(other.initializer);
+            //if (auto *p = dynamic_cast<
+            //this->initializer = std::make_unique(other.initializer.get());
+        }
+        
 
         [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             return fmt::format(

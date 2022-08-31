@@ -1,11 +1,10 @@
 #pragma once
 
-//#include "environment.h"
 #include "error.h"
 #include "resolver.h"
 #include "scanner.h"
 #include "parser.h"
-//#include "emitter.h"
+#include "emitter.h"
 
 #include <istream>
 #include <iostream>
@@ -70,14 +69,9 @@ struct Compiler {
             //fmt::print("[ {}  --  {} ]\n", std::visit(ValuePrintVisitor{}, expr), depth);
         //}
 
-        //Emitter::Emitter e("testoutput.asm", locals);
-        //e.emit(statements);
+        Emitter::Emitter e("testoutput.asm");
+        e.emit(statements);
 
         return 0;
     }
-
-private:
-    //Environment<ValueVariant> environment;
-    //Environment<ValueVariant> globals;
-    //std::unordered_map<ValueVariant, std::size_t> locals;
 };

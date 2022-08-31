@@ -56,256 +56,308 @@ static constexpr std::array registerNames {
     "MAX_COUNT",
 };
 
-//struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVisitor {
+struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVisitor {
 
-    //Emitter(const std::string& filepath, std::unordered_map<Value, std::size_t>& locals)
-        //: filepath(filepath)
-        //, locals(locals)
-    //{
-    //}
+    Emitter(const std::string& filepath)
+        : filepath(filepath)
+    {
+    }
 
-    //void emit(const StatementList& statements) {
-        //emit_line("", "=== Auto-generated code ===");
+    void emit(const StatementList& statements) {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        emit_line("", "=== Auto-generated code ===");
 
-        //emit_line("%include \"asm/defines.inc\"", "bring syscall defines into scope");
-        //emit_line("section .text", "begin source code segment");
-        //emit_line("global _start", "make entrypoint function visible to linker");
+        emit_line("%include \"asm/defines.inc\"", "bring syscall defines into scope");
+        emit_line("section .text", "begin source code segment");
+        emit_line("global _start", "make entrypoint function visible to linker");
 
-        //emit_line("_start:", "entrypoint function");
-        //emit_line("  push rbp", "store old rbp on stack");
-        //emit_line("  mov rbp, rsp", "store stack pointer in rbp so it can be used as the base pointer for the functions stack frame\n");
+        emit_line("_start:", "entrypoint function");
+        emit_line("  push rbp", "store old rbp on stack");
+        emit_line("  mov rbp, rsp", "store stack pointer in rbp so it can be used as the base pointer for the functions stack frame\n");
 
-        //emit_line("  call main", "user defined main function\n");
+        emit_line("  call main", "user defined main function\n");
 
-        //emit_line("  mov rdi, rax", "set exit code to what main put in rax");
-        //emit_line("  mov rax, SYS_EXIT", "prepare to exit with code 0");
-        //emit_line("  syscall", "call exit");
+        emit_line("  mov rdi, rax", "set exit code to what main put in rax");
+        emit_line("  mov rax, SYS_EXIT", "prepare to exit with code 0");
+        emit_line("  syscall", "call exit");
 
-        //for (const auto &statement : statements) {
-            //emit_statement(statement);
-        //}
+        for (const auto &statement : statements) {
+            emit_statement(statement);
+        }
 
-        //std::ofstream file(filepath);
-        //file << output.str();
-        //file.close();
+        std::ofstream file(filepath);
+        file << output.str();
+        file.close();
 
-        //spdlog::info("Emitter done");
-    //}
+        spdlog::info("Emitter done");
+    }
 
-//private:
-    //void emit_line(std::string_view line, std::string_view comment = "") {
-        //output << fmt::format("{:30}; {}\n", line, comment);
-    //}
+private:
+    void emit_line(std::string_view line, std::string_view comment = "") {
+        output << fmt::format("{:30}; {}\n", line, comment);
+    }
 
-    //void emit_statement(const std::unique_ptr<Statement>& statement) {
-        //statement->accept(*this);
-    //}
+    void emit_statement(const std::unique_ptr<Statement>& statement) {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        statement->accept(*this);
+    }
 
-    //void visit(VariableDefinition& statement) override {
+    void visit(VariableDefinition& statement) override {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
 
-        //// push initializer value on stack
-        //statement.initializer->accept(*this);
+        // push initializer value on stack
+        statement.initializer->accept(*this);
 
-        //auto idx1 = getNextFreeRegister();
-        //emit_line(fmt::format("  pop {}", registerNames[idx1]), "pop initializer into register");
+        auto idx1 = getNextFreeRegister();
+        emit_line(fmt::format("  pop {}", registerNames[idx1]), "pop initializer into register");
 
-        //emit_line(fmt::format("  mov [rsp - {:#x}], {}", statement.offset, registerNames[idx1]), "pop initializer into register");
+        emit_line(fmt::format("  mov [rsp - {:#x}], {}", statement.offset, registerNames[idx1]), "pop initializer into register");
 
-        //environment.define(statement.name.getLexeme(), statement.name);
+        environment.define(statement.name.getLexeme(), std::make_shared<VariableDefinition>(statement));
         
-        //// cleanup registers
-        //m_registers.flip(idx1);
-    //}
+        // cleanup registers
+        m_registers.flip(idx1);
+    }
 
-    //void visit(ExpressionStatement& statement) override {
-        ////statement.accept(*this);
-    //}
+    void visit(ExpressionStatement& statement) override {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        statement.expression->accept(*this);
 
-    //void visit(Print& statement) override {}
 
-    //void visit(Return& statement) override {
-        //statement.value->accept(*this);
-        //emit_line("  pop rax", "pop result of binary expression into rax");
-    //}
+        assert(false);
 
-    //void visit(Function& statement) override {
-        //// @todo pretty print the params of the function as comment above
-        //emit_line("");
-        //emit_line(fmt::format("{}:", statement.name.lexeme), "User defined function");
-        //emit_line("  push rbp", "save rbp since it is callee saved");
-        //emit_line("  mov rbp, rsp", "setup rbp to use it as the base pointer");
-        //emit_line(fmt::format("  sub rsp, {}", statement.stack_size), fmt::format("reserve {} bytes on the stack", statement.stack_size));
+    }
 
-        //for (const auto& s : statement.body) {
-            //s->accept(*this);
+    void visit(Print& statement) override {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+    }
+
+    void visit(Return& statement) override {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        statement.value->accept(*this);
+        emit_line("  pop rax", "pop result of binary expression into rax");
+    }
+
+    void visit(Function& statement) override {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        // @todo pretty print the params of the function as comment above
+        emit_line("");
+        emit_line(fmt::format("{}:", statement.name.lexeme), "User defined function");
+        emit_line("  push rbp", "save rbp since it is callee saved");
+        emit_line("  mov rbp, rsp", "setup rbp to use it as the base pointer");
+        emit_line(fmt::format("  sub rsp, {}", statement.stack_size), fmt::format("reserve {} bytes on the stack", statement.stack_size));
+
+        for (const auto& s : statement.body) {
+            s->accept(*this);
+        }
+
+        emit_line("  mov rsp, rbp", "restore rsp (cleanup stack)");
+        emit_line("  pop rbp", "get rbp back, since it is callee saved");
+        emit_line("  ret");
+    }
+
+    void visit(Assignment& expression) override {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        assert(false);
+        //lookup_variable(expression.name);
+    }
+    void visit(BinaryOperator& expression) override {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        // recursivly push lhs on stack
+        expression.lhs->accept(*this);
+
+        // recursivly push rhs on stack
+        expression.rhs->accept(*this);
+
+        switch (expression.operator_type.type) {
+            case TokenType::Plus: {
+                auto idx1 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+
+                auto idx2 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx2]), "take second value from stack");
+
+                // do the addition and push result on stack
+                emit_line(fmt::format("  add {}, {}", registerNames[idx1], registerNames[idx2]));
+                emit_line(fmt::format("  push {}", registerNames[idx1]));
+
+                // clear the used registers
+                m_registers.flip(idx1);
+                m_registers.flip(idx2);
+                break;
+            }
+            case TokenType::Minus: {
+                auto idx1 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+
+                auto idx2 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx2]), "take second value from stack");
+
+                // do the subtraction and push result on stack
+                emit_line(fmt::format("  sub {}, {}", registerNames[idx2], registerNames[idx1]));
+                emit_line(fmt::format("  push {}", registerNames[idx2]));
+
+                // clear the used registers
+                m_registers.flip(idx1);
+                m_registers.flip(idx2);
+                break;
+            }
+            case TokenType::Star: {
+                auto idx1 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+
+                emit_line(fmt::format("  pop rax"), "take second value from stack");
+
+                emit_line(fmt::format("  mul {}", registerNames[idx1]));
+
+                // @todo if i need to keep rax consistent, then push it in the beginning and pop it at the end, therefore mov <free_register>, rax before
+                emit_line(fmt::format("  push rax"));
+
+                // clear the used registers
+                m_registers.flip(idx1);
+
+                break;
+            }
+            case TokenType::Slash: {
+
+                emit_line("  xor rdx, rdx", "set rdx to 0 so it does not mess with the division");
+                auto idx1 = getNextFreeRegister();
+                emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+                emit_line(fmt::format("  pop rax"), "take second value from stack");
+
+
+                emit_line(fmt::format("  div {}", registerNames[idx1]));
+
+                // @todo if i need to keep rax consistent, then push it in the beginning and pop it at the end, therefore mov <free_register>, rax before
+                emit_line(fmt::format("  push rax"));
+
+                // clear the used registers
+                m_registers.flip(idx1);
+
+                break;
+            }
+            default:
+                fmt::print(stderr, "Emitter: {}", expression.operator_type);
+                assert(false && "Emitter: BinaryOperator");
+        };
+
+        //if (op == "mul") {
+            //firstIdx = getNextFreeRegister();
+            //spdlog::info("Moving lhs into register {}", registerNames[firstIdx]);
+            //expression.lhs->accept(*this);
+
+            //emit_line(fmt::format("  mov rax, {}", registerNames[firstIdx]), "mul multiplies the value in register by rax");
+
+            //secondIdx = getNextFreeRegister();
+            //spdlog::info("Moving rhs into register {}", registerNames[secondIdx]);
+            //expression.rhs->accept(*this);
+
+            //emit_line(fmt::format("  {} {}", op, registerNames[secondIdx]));
+            //emit_line(fmt::format("  push rax"), "result is already in rax");
+        //} else {
+            //firstIdx = getNextFreeRegister();
+            //spdlog::info("Moving lhs into register {}", registerNames[firstIdx]);
+            //expression.lhs->accept(*this);
+
+            //secondIdx = getNextFreeRegister();
+            //spdlog::info("Moving rhs into register {}", registerNames[secondIdx]);
+            //expression.rhs->accept(*this);
+
+            //emit_line(fmt::format("  {} {}, {}", op, registerNames[firstIdx], registerNames[secondIdx]));
+            //emit_line(fmt::format("  push {}", registerNames[firstIdx]));
         //}
+    }
 
-        //emit_line("  mov rsp, rbp", "restore rsp (cleanup stack)");
-        //emit_line("  pop rbp", "get rbp back, since it is callee saved");
-        //emit_line("  ret");
-    //}
-
-    //void visit(Assignment& expression) override {}
-    //void visit(BinaryOperator& expression) override {
-        //// recursivly push lhs on stack
-        //expression.lhs->accept(*this);
-
-        //// recursivly push rhs on stack
-        //expression.rhs->accept(*this);
-
-        //switch (expression.operator_type.type) {
-            //case TokenType::Plus: {
-                //auto idx1 = getNextFreeRegister();
-                //emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
-
-                //auto idx2 = getNextFreeRegister();
-                //emit_line(fmt::format("  pop {}", registerNames[idx2]), "take second value from stack");
-
-                //// do the addition and push result on stack
-                //emit_line(fmt::format("  add {}, {}", registerNames[idx1], registerNames[idx2]));
-                //emit_line(fmt::format("  push {}", registerNames[idx1]));
-
-                //// clear the used registers
-                //m_registers.flip(idx1);
-                //m_registers.flip(idx2);
-                //break;
-            //}
-            //case TokenType::Minus: {
-                //auto idx1 = getNextFreeRegister();
-                //emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
-
-                //auto idx2 = getNextFreeRegister();
-                //emit_line(fmt::format("  pop {}", registerNames[idx2]), "take second value from stack");
-
-                //// do the subtraction and push result on stack
-                //emit_line(fmt::format("  sub {}, {}", registerNames[idx2], registerNames[idx1]));
-                //emit_line(fmt::format("  push {}", registerNames[idx2]));
-
-                //// clear the used registers
-                //m_registers.flip(idx1);
-                //m_registers.flip(idx2);
-                //break;
-            //}
-            //case TokenType::Star: {
-                //auto idx1 = getNextFreeRegister();
-                //emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
-
-                //emit_line(fmt::format("  pop rax"), "take second value from stack");
-
-                //emit_line(fmt::format("  mul {}", registerNames[idx1]));
-
-                //// @todo if i need to keep rax consistent, then push it in the beginning and pop it at the end, therefore mov <free_register>, rax before
-                //emit_line(fmt::format("  push rax"));
-
-                //// clear the used registers
-                //m_registers.flip(idx1);
-
-                //break;
-            //}
-            //case TokenType::Slash: {
-
-                //emit_line("  xor rdx, rdx", "set rdx to 0 so it does not mess with the division");
-                //auto idx1 = getNextFreeRegister();
-                //emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
-                //emit_line(fmt::format("  pop rax"), "take second value from stack");
-
-
-                //emit_line(fmt::format("  div {}", registerNames[idx1]));
-
-                //// @todo if i need to keep rax consistent, then push it in the beginning and pop it at the end, therefore mov <free_register>, rax before
-                //emit_line(fmt::format("  push rax"));
-
-                //// clear the used registers
-                //m_registers.flip(idx1);
-
-                //break;
-            //}
-            //default:
-                //fmt::print(stderr, "Emitter: {}", expression.operator_type);
-                //assert(false && "Emitter: BinaryOperator");
-        //};
-
-        ////if (op == "mul") {
-            ////firstIdx = getNextFreeRegister();
-            ////spdlog::info("Moving lhs into register {}", registerNames[firstIdx]);
-            ////expression.lhs->accept(*this);
-
-            ////emit_line(fmt::format("  mov rax, {}", registerNames[firstIdx]), "mul multiplies the value in register by rax");
-
-            ////secondIdx = getNextFreeRegister();
-            ////spdlog::info("Moving rhs into register {}", registerNames[secondIdx]);
-            ////expression.rhs->accept(*this);
-
-            ////emit_line(fmt::format("  {} {}", op, registerNames[secondIdx]));
-            ////emit_line(fmt::format("  push rax"), "result is already in rax");
-        ////} else {
-            ////firstIdx = getNextFreeRegister();
-            ////spdlog::info("Moving lhs into register {}", registerNames[firstIdx]);
-            ////expression.lhs->accept(*this);
-
-            ////secondIdx = getNextFreeRegister();
-            ////spdlog::info("Moving rhs into register {}", registerNames[secondIdx]);
-            ////expression.rhs->accept(*this);
-
-            ////emit_line(fmt::format("  {} {}, {}", op, registerNames[firstIdx], registerNames[secondIdx]));
-            ////emit_line(fmt::format("  push {}", registerNames[firstIdx]));
-        ////}
-    //}
-
-    //// loads the value into the next free register r8-r15
-    //void visit(Number& expression) override {
-        ////auto idx = getNextFreeRegister();
-        ////emit_line(fmt::format("  mov {}, {}", registerNames[idx], expression.value));
+    // loads the value into the next free register r8-r15
+    void visit(Number& expression) override {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        //auto idx = getNextFreeRegister();
+        //emit_line(fmt::format("  mov {}, {}", registerNames[idx], expression.value));
         
-        //emit_line(fmt::format("  push {}", expression.value), "push value on stack");
+        emit_line(fmt::format("  push {}", expression.value), "push value on stack");
 
-        ////m_registers.set(idx);
-    //}
+        //m_registers.set(idx);
+    }
 
-    //void visit(Bool& expression) override {}
+    void visit(Bool& expression) override {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+    }
 
-    //void visit(Variable& expression) override {
-        //// make lookup to get the right variable with the correct offset
-        //auto var = lookup_variable(expression.name);
+    void visit(Variable& expression) override {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        // make lookup to get the right variable with the correct offset
+        auto var = lookup_variable(expression);
 
-        //fmt::print("{}", var);
-    //}
+        if (std::holds_alternative<std::shared_ptr<VariableDefinition>>(var)) {
+            std::get<std::shared_ptr<VariableDefinition>>(var)->initializer->accept(*this);
+        }
 
-    //void visit(Unary& expression) override {}
+        //if (auto *p = dynamic_cast<Variable>
 
-    //Value lookup_variable(const Token& name) {
-        //try {
-            //fmt::print(stderr, "======================\nDo lookup for {}\n======================", name);
-            //for (auto &[expr, depth] : locals) {
-                //fmt::print(stderr, "======================\nLocals:{} -- {}\n======================", name, depth);
+        //fmt::print("{}", std::visit(ValuePrintVisitor{}, var));
+    }
+
+    void visit(Unary& expression) override {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+    }
+
+    ValueVariant lookup_variable(const Variable& var) {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        try {
+            const auto distance = var.scope_distance;
+            auto found_value = environment.getAt(distance, var.name.lexeme);
+            //if (std::holds_alternative<Variable>(found_value)) {
+                //return std::get<Variable>(found_value);
             //}
-            //const auto distance = locals.at(name);
-            //spdlog::info(fmt::format("Distance for variable '{}' is {}", name, distance));
-            //auto found_value = environment.getAt(distance, name.lexeme);
-            //spdlog::info(fmt::format("Found {}", found_value));
-            //return found_value;
-        //} catch (std::out_of_range&) {
-            //assert(false && "no global env right now");
-        //}
-    //}
-
-//private:
-    //std::size_t getNextFreeRegister() {
-        //for (std::size_t idx = Register::R8; idx <= Register::R15; ++idx) {
-            //if (!m_registers.test(idx)) {
-                //m_registers.set(idx);
-                //return idx;
+            //if (std::holds_alternative<VariableDefinition>(found_value)) {
+                //return std::get<VariableDefinition>(found_value);
             //}
-        //}
-        //assert(false && "getNextFreeRegister");
-    //}
 
-    //std::string filepath;
-    //std::bitset<Register::MAX_COUNT> m_registers {};
-    //std::stringstream output {};
-    //std::unordered_map<ValueVariant, std::size_t>& locals;
-    //Environment<ValueVariant> environment;
-    //Environment<ValueVariant> globals;
-//};
+            return found_value;
+        } catch (std::out_of_range&) {
+            assert(false && "no global env right now");
+        } catch (...) {
+            assert(false && "no global env right now .. something else");
+        }
+    }
+
+    ValueVariant lookup_variable(const Assignment& var) {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        try {
+            const auto distance = var.scope_distance;
+            auto found_value = environment.getAt(distance, var.name.lexeme);
+            //if (std::holds_alternative<Variable>(found_value)) {
+                //return std::get<Variable>(found_value);
+            //}
+            //if (std::holds_alternative<VariableDefinition>(found_value)) {
+                //return std::get<VariableDefinition>(found_value);
+            //}
+
+            return found_value;
+        } catch (std::out_of_range&) {
+            assert(false && "no global env right now");
+        } catch (...) {
+            assert(false && "no global env right now .. something else");
+        }
+    }
+
+private:
+    std::size_t getNextFreeRegister() {
+        spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+        for (std::size_t idx = Register::R8; idx <= Register::R15; ++idx) {
+            if (!m_registers.test(idx)) {
+                m_registers.set(idx);
+                return idx;
+            }
+        }
+        assert(false && "getNextFreeRegister");
+    }
+
+    std::string filepath;
+    std::bitset<Register::MAX_COUNT> m_registers {};
+    std::stringstream output {};
+    Environment<ValueVariant> environment;
+    Environment<ValueVariant> globals;
+};
 
 } // namespace Emitter
