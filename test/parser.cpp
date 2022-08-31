@@ -44,19 +44,6 @@ auto fmt::formatter<Parser::StatementList>::format(const Parser::StatementList& 
     return true;
 }
 
-// @todo this failes since the parser does not report errors correctly
-//TEST(parser, var_with_name) {
-    //Scanner s;
-    //Parser p;
-    //auto tokens = s.scan("let a;");
-    //auto stmts = p.parse(tokens);
-
-    //Parser::StatementList expected;
-    //Token name { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 1, .column = 5 }, };
-    //expected.push_back(std::make_unique<Statements::VariableDefinition>(name, nullptr));
-    //EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
-//}
-
 TEST(parser, variable_assignment) {
     Scanner s;
     Parser p;

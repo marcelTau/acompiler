@@ -217,13 +217,11 @@ struct Resolver
     void visit(ExpressionStatement& statement) override {
         spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
         resolve(statement.expression);
-        //assert(false && "TODO resolver");
     }
 
     void visit(Print& statement) override {
         spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
     }
-
     
     /// When a new function is introduced to the scope
     void visit(Function& statement) override {
@@ -256,8 +254,6 @@ struct Resolver
         spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
         resolve(expression.value);
         resolve(expression, expression.name);
-        //self.resolve_expr(expr.value.clone())?;
-        //self.resolve_local(wrapper, &expr.name);
     }
 
 
@@ -300,7 +296,6 @@ private:
 
     std::vector<std::unordered_map<VariableName, State>> scopes;
     FunctionType current_function { FunctionType::None };
-    //std::unordered_map<ValueVariant, std::size_t> locals;
 };
 
 } // namespace Resolver
