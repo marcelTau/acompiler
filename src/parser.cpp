@@ -162,11 +162,44 @@ auto Parser::statement() -> Result<UniqStatement> {
     if (checkAndAdvance(TokenType::Print)) {
         return printStatement();
     }
+
     if (checkAndAdvance(TokenType::Return)) {
         return returnStatement();
     }
 
+    if (checkAndAdvance(TokenType::If)) {
+        return ifStatement();
+    }
+
     return expressionStatement();
+}
+
+auto Parser::ifStatement() -> Result<UniqStatement> {
+    auto condition = expression();
+    if (!condition) {
+        return condition.get_err();
+    }
+
+    std::ignore = consume(TokenType::Then, "Expect 'then' after if-condition.");
+
+    auto then_branch = statement();
+    if (!then_branch) {
+        return then_branch.get_err();
+    }
+
+    std::unique_ptr<Statements::Statement> else_branch { nullptr };
+
+    if (checkAndAdvance(TokenType::Else)) {
+        auto else_branch_result = statement();
+        if (!else_branch_result) {
+            return else_branch_result.get_err();
+        }
+
+        else_branch = else_branch_result.unwrap();
+    }
+
+    auto ifStatement = std::make_unique<Statements::IfStatement>(condition.unwrap(), then_branch.unwrap(), std::move(else_branch));
+    return Result<UniqStatement>(std::move(ifStatement));
 }
 
 auto Parser::returnStatement() -> Result<UniqStatement> {

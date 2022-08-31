@@ -166,11 +166,12 @@ void Emitter::visit(BinaryOperator& expression) {
 
 void Emitter::visit(Number& expression) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
-    emit_line(fmt::format("  push {}", expression.value), "push value on stack");
+    emit_line(fmt::format("  push {}", expression.value), "push number value on stack");
 }
 
-void Emitter::visit(Bool& /* expression */) {
+void Emitter::visit(Bool& expression) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+    emit_line(fmt::format("  push {}", expression.value ? 1 : 0), "push bool value on stack");
 }
 
 void Emitter::visit(Variable& expression) {

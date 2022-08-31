@@ -39,6 +39,7 @@ namespace Statements {
     struct Print;
     struct Function;
     struct Return;
+    struct IfStatement;
 
     struct StatementVisitor {
         virtual void visit(VariableDefinition& statement) = 0;
@@ -192,6 +193,33 @@ namespace Statements {
         }
 
         std::unique_ptr<Expression> value;
+    };
+
+    struct IfStatement : public StatementAcceptor<IfStatement> {
+        IfStatement(std::unique_ptr<Expression> condition, std::unique_ptr<Statement> then_branch, std::unique_ptr<Statement> else_branch)
+            : condition(std::move(condition))
+            , then_branch(std::move(then_branch))
+            , else_branch(std::move(then_branch))
+        {}
+
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
+            //return fmt::format("Return: .value {{ {} }}", value ? value->to_string() : "nullptr");
+            return fmt::format(
+                    "{0:>{w}}IfStatement:\n"
+                    "{0:>{w}}  .condition =\n{2}\n"
+                    "{0:>{w}}  .condition =\n{3}\n"
+                    "{0:>{w}}  .condition =\n{4}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    condition ? condition->to_string(offset + 4) : "nullptr",
+                    then_branch ? then_branch->to_string(offset + 4) : "nullptr",
+                    else_branch ? else_branch->to_string(offset + 4) : "nullptr"
+            );
+        }
+
+        std::unique_ptr<Expression> condition;
+        std::unique_ptr<Statement> then_branch;
+        std::unique_ptr<Statement> else_branch;
     };
 
 } // namespace Statements
@@ -420,6 +448,7 @@ public:
     [[nodiscard]] auto declaration() -> Result<UniqStatement>;
     [[nodiscard]] auto varDeclaration() -> Result<UniqStatement>;
     [[nodiscard]] auto statement() -> Result<UniqStatement>;
+    [[nodiscard]] auto ifStatement() -> Result<UniqStatement>;
     [[nodiscard]] auto returnStatement() -> Result<UniqStatement>;
     [[nodiscard]] auto expressionStatement() -> Result<UniqStatement>;
     [[nodiscard]] auto printStatement() -> Result<UniqStatement>;
