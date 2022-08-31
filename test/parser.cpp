@@ -515,7 +515,7 @@ TEST(parser, new_variable_assignment_with_type_annotation_IMPORTANT) {
 
     auto varName = Token{ .type = TokenType::Identifier, .lexeme = "x", .position = { .line = 1, .column = 5 }};
     auto varInitializer = std::make_unique<Expressions::Number>("10");
-    auto datatype = DataType { .name = "Int", .size = 4 };
+    auto datatype = DataType { .name = "Int", .size = 8 };
 
     auto varDefinition = std::make_unique<Statements::VariableDefinition>(varName, std::move(varInitializer), datatype);
 

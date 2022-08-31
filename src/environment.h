@@ -8,15 +8,7 @@
 #include <cassert>
 #include <unordered_map>
 
-//using ValueVariant = std::variant<
-    //std::monostate,
-    //std::shared_ptr<Statements::VariableDefinition>,
-    //std::shared_ptr<Expressions::Variable>,
-    //std::shared_ptr<Statements::Function>
-//>;
-
 using ValueVariant = std::variant<
-    //std::monostate,
     std::shared_ptr<Statements::VariableDefinition>,
     std::shared_ptr<Expressions::Variable>,
     std::shared_ptr<Statements::Function>
@@ -47,12 +39,6 @@ struct Environment {
         spdlog::info(fmt::format("Environment: get at {} {}", distance, name));
         if (distance == 0) {
             try {
-                fmt::print(stderr, "ENV: Trying to get variable '{}', values.size() = {}\n", name, values.size());
-
-                for (const auto &[name, value] : values) {
-                    fmt::print(stderr, "{}: {}", name, std::visit(ValuePrintVisitor{}, value));
-                }
-
                 return values.at(std::string{name});
             } catch (std::out_of_range& e) {
                 assert(false && "TODO: Environment::getAt");

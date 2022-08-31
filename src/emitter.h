@@ -6,6 +6,7 @@
 #include <spdlog/spdlog.h>
 #include <sstream>
 #include <bitset>
+#include <variant>
 
 namespace Emitter {
 
@@ -124,7 +125,7 @@ private:
     void visit(ExpressionStatement& statement) override {
         spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
         statement.expression->accept(*this);
-        assert(false);
+        //assert(false);
     }
 
     void visit(Print& statement) override {
@@ -160,8 +161,23 @@ private:
 
     void visit(Assignment& expression) override {
         spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
-        assert(false);
-        //lookup_variable(expression.name);
+        //assert(false);
+        auto var = lookup_variable(expression);
+
+        if (std::holds_alternative<std::shared_ptr<VariableDefinition>>(var)) {
+            std::size_t offset = std::get<std::shared_ptr<VariableDefinition>>(var)->offset;
+
+            // put value on the stack
+            expression.value->accept(*this);
+
+            auto idx1 = getNextFreeRegister();
+            emit_line(fmt::format("  pop {}", registerNames[idx1]), "take new value from stack");
+            
+            // assign new value to variable
+            emit_line(fmt::format("  mov QWORD [rbp - {:#x}], {}", offset, registerNames[idx1]), "move new value into old position in stack");
+            m_registers.flip(idx1);
+        }
+        spdlog::info(fmt::format("Done: Emitter: {}", __PRETTY_FUNCTION__));
     }
     void visit(BinaryOperator& expression) override {
         spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
@@ -242,43 +258,12 @@ private:
                 fmt::print(stderr, "Emitter: {}", expression.operator_type);
                 assert(false && "Emitter: BinaryOperator");
         };
-
-        //if (op == "mul") {
-            //firstIdx = getNextFreeRegister();
-            //spdlog::info("Moving lhs into register {}", registerNames[firstIdx]);
-            //expression.lhs->accept(*this);
-
-            //emit_line(fmt::format("  mov rax, {}", registerNames[firstIdx]), "mul multiplies the value in register by rax");
-
-            //secondIdx = getNextFreeRegister();
-            //spdlog::info("Moving rhs into register {}", registerNames[secondIdx]);
-            //expression.rhs->accept(*this);
-
-            //emit_line(fmt::format("  {} {}", op, registerNames[secondIdx]));
-            //emit_line(fmt::format("  push rax"), "result is already in rax");
-        //} else {
-            //firstIdx = getNextFreeRegister();
-            //spdlog::info("Moving lhs into register {}", registerNames[firstIdx]);
-            //expression.lhs->accept(*this);
-
-            //secondIdx = getNextFreeRegister();
-            //spdlog::info("Moving rhs into register {}", registerNames[secondIdx]);
-            //expression.rhs->accept(*this);
-
-            //emit_line(fmt::format("  {} {}, {}", op, registerNames[firstIdx], registerNames[secondIdx]));
-            //emit_line(fmt::format("  push {}", registerNames[firstIdx]));
-        //}
     }
 
     // loads the value into the next free register r8-r15
     void visit(Number& expression) override {
         spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
-        //auto idx = getNextFreeRegister();
-        //emit_line(fmt::format("  mov {}, {}", registerNames[idx], expression.value));
-        
         emit_line(fmt::format("  push {}", expression.value), "push value on stack");
-
-        //m_registers.set(idx);
     }
 
     void visit(Bool& expression) override {
@@ -314,16 +299,10 @@ private:
 
     ValueVariant lookup_variable(const Variable& var) {
         spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+
         try {
             const auto distance = var.scope_distance;
             auto found_value = environment.getAt(distance, var.name.lexeme);
-            //if (std::holds_alternative<Variable>(found_value)) {
-                //return std::get<Variable>(found_value);
-            //}
-            //if (std::holds_alternative<VariableDefinition>(found_value)) {
-                //return std::get<VariableDefinition>(found_value);
-            //}
-
             return found_value;
         } catch (std::out_of_range&) {
             assert(false && "no global env right now");
@@ -337,13 +316,6 @@ private:
         try {
             const auto distance = var.scope_distance;
             auto found_value = environment.getAt(distance, var.name.lexeme);
-            //if (std::holds_alternative<Variable>(found_value)) {
-                //return std::get<Variable>(found_value);
-            //}
-            //if (std::holds_alternative<VariableDefinition>(found_value)) {
-                //return std::get<VariableDefinition>(found_value);
-            //}
-
             return found_value;
         } catch (std::out_of_range&) {
             assert(false && "no global env right now");
