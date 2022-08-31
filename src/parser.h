@@ -63,7 +63,7 @@ namespace Statements {
     };
 
     struct VariableDefinition : public StatementAcceptor<VariableDefinition> {
-        VariableDefinition() = default;
+        //VariableDefinition() = default;
         VariableDefinition(const Token& name, std::unique_ptr<Expression> initializer, DataType data_type = {})
             : name(name)
             , initializer(std::move(initializer))
@@ -78,9 +78,6 @@ namespace Statements {
             , offset(other.offset)
             , scope_distance(other.scope_distance)
         {
-            //this->initializer.swap(other.initializer);
-            //if (auto *p = dynamic_cast<
-            //this->initializer = std::make_unique(other.initializer.get());
         }
         
 

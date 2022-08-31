@@ -13,6 +13,7 @@ set(SOURCES
     src/parser.cpp
     src/parser.h
 
+    src/emitter.cpp
     src/emitter.h
 
     src/token.cpp
