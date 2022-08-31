@@ -430,7 +430,7 @@ namespace Expressions {
                     "{0:>{w}}  .datatype = {5}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
-                    rhs->to_string(offset + 4),
+                    lhs->to_string(offset + 4),
                     operator_type,
                     rhs->to_string(offset + 4),
                     datatype.to_string()

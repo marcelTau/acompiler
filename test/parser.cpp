@@ -555,3 +555,78 @@ TEST(parser, logical_and_simple) {
     expected.push_back(std::move(varDefinition));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
+
+TEST(parser, logical_or_simple_multiple) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("let x: Bool = 1 or 2 or 3;");
+    auto stmts = p.parse(tokens);
+
+    auto varName = Token{ .type = TokenType::Identifier, .lexeme = "x", .position = { .line = 1, .column = 5 }};
+
+    auto lhs = std::make_unique<Expressions::Number>("1");
+    auto op = Token{ .type = TokenType::Or, .lexeme = "or", .position = { .line = 1, .column = 18 }};
+    auto mid = std::make_unique<Expressions::Number>("2");
+
+    auto op2 = Token{ .type = TokenType::Or, .lexeme = "or", .position = { .line = 1, .column = 23 }};
+    auto rhs = std::make_unique<Expressions::Number>("3");
+
+    auto lhsInitializer = std::make_unique<Expressions::Logical>(std::move(lhs), op, std::move(mid));
+    auto varInitializer = std::make_unique<Expressions::Logical>(std::move(lhsInitializer), op2, std::move(rhs));
+
+    auto datatype = DataType { .name = "Bool", .size = 8 };
+    auto varDefinition = std::make_unique<Statements::VariableDefinition>(varName, std::move(varInitializer), datatype);
+    expected.push_back(std::move(varDefinition));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, logical_and_simple_multiple) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("let x: Bool = 1 and 2 and 3;");
+    auto stmts = p.parse(tokens);
+
+    auto varName = Token{ .type = TokenType::Identifier, .lexeme = "x", .position = { .line = 1, .column = 5 }};
+
+    auto lhs = std::make_unique<Expressions::Number>("1");
+    auto op = Token{ .type = TokenType::And, .lexeme = "and", .position = { .line = 1, .column = 19 }};
+    auto mid = std::make_unique<Expressions::Number>("2");
+
+    auto op2 = Token{ .type = TokenType::And, .lexeme = "and", .position = { .line = 1, .column = 25 }};
+    auto rhs = std::make_unique<Expressions::Number>("3");
+
+    auto lhsInitializer = std::make_unique<Expressions::Logical>(std::move(lhs), op, std::move(mid));
+    auto varInitializer = std::make_unique<Expressions::Logical>(std::move(lhsInitializer), op2, std::move(rhs));
+
+    auto datatype = DataType { .name = "Bool", .size = 8 };
+    auto varDefinition = std::make_unique<Statements::VariableDefinition>(varName, std::move(varInitializer), datatype);
+    expected.push_back(std::move(varDefinition));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, logical_and_simple_multiple_mixed) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("let x: Bool = 1 and 2 or 3;");
+    auto stmts = p.parse(tokens);
+
+    auto varName = Token{ .type = TokenType::Identifier, .lexeme = "x", .position = { .line = 1, .column = 5 }};
+
+    auto lhs = std::make_unique<Expressions::Number>("1");
+    auto op = Token{ .type = TokenType::And, .lexeme = "and", .position = { .line = 1, .column = 19 }};
+    auto mid = std::make_unique<Expressions::Number>("2");
+
+    auto op2 = Token{ .type = TokenType::Or, .lexeme = "or", .position = { .line = 1, .column = 24 }};
+    auto rhs = std::make_unique<Expressions::Number>("3");
+
+    auto lhsInitializer = std::make_unique<Expressions::Logical>(std::move(lhs), op, std::move(mid));
+    auto varInitializer = std::make_unique<Expressions::Logical>(std::move(lhsInitializer), op2, std::move(rhs));
+
+    auto datatype = DataType { .name = "Bool", .size = 8 };
+    auto varDefinition = std::make_unique<Statements::VariableDefinition>(varName, std::move(varInitializer), datatype);
+    expected.push_back(std::move(varDefinition));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
