@@ -1,3 +1,4 @@
+#include <csignal>
 #include <gtest/gtest.h>
 #include "parser.h"
 #include "scanner.h"
@@ -732,5 +733,32 @@ TEST(parser, comparison_simple_greater_eq) {
     auto datatype = DataType { .name = "Bool", .size = 8 };
     auto varDefinition = std::make_unique<Statements::VariableDefinition>(varName, std::move(varInitializer), datatype);
     expected.push_back(std::move(varDefinition));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, simple_if_statement) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("if 1 == 1 then return 2; end");
+    auto stmts = p.parse(tokens);
+
+    auto lhs = std::make_unique<Expressions::Number>("1");
+    auto op = Token{ .type = TokenType::EqualEqual, .lexeme = "==", .position = { .line = 1, .column = 6 }};
+    auto rhs = std::make_unique<Expressions::Number>("1");
+
+    auto condition = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), op, std::move(rhs));
+
+    auto returnValue = std::make_unique<Expressions::Number>("2");
+    auto then_branch = std::make_unique<Statements::Return>(std::move(returnValue));
+
+    std::vector<std::unique_ptr<Statements::Statement>> block_statements;
+
+    block_statements.push_back(std::move(then_branch));
+    auto then_block = std::make_unique<Statements::Block>(std::move(block_statements));
+
+    auto ifStatement = std::make_unique<Statements::IfStatement>(std::move(condition), std::move(then_block), nullptr);
+
+    expected.push_back(std::move(ifStatement));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }

@@ -40,6 +40,7 @@ namespace Statements {
     struct Function;
     struct Return;
     struct IfStatement;
+    struct Block;
 
     struct StatementVisitor {
         virtual void visit(VariableDefinition& statement) = 0;
@@ -48,6 +49,7 @@ namespace Statements {
         virtual void visit(Function& statement) = 0;
         virtual void visit(Return& statement) = 0;
         virtual void visit(IfStatement& statement) = 0;
+        virtual void visit(Block& statement) = 0;
         virtual ~StatementVisitor() = default;
     };
 
@@ -205,8 +207,8 @@ namespace Statements {
             return fmt::format(
                     "{0:>{w}}IfStatement:\n"
                     "{0:>{w}}  .condition =\n{2}\n"
-                    "{0:>{w}}  .condition =\n{3}\n"
-                    "{0:>{w}}  .condition =\n{4}\n",
+                    "{0:>{w}}  .then_branch =\n{3}\n"
+                    "{0:>{w}}  .else_branch =\n{4}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
                     condition ? condition->to_string(offset + 4) : "nullptr",
@@ -218,6 +220,29 @@ namespace Statements {
         std::unique_ptr<Expression> condition;
         std::unique_ptr<Statement> then_branch;
         std::unique_ptr<Statement> else_branch;
+    };
+
+    struct Block : public StatementAcceptor<Block> {
+        Block(std::vector<std::unique_ptr<Statement>>  statements)
+            : statements(std::move(statements))
+        {}
+
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
+            std::stringstream ss;
+
+            for (const auto& statement : statements) {
+                ss << statement->to_string(offset + 4) << '\n';
+            }
+            return fmt::format(
+                    "{0:>{w}}Block:\n"
+                    "{0:>{w}}  .statements =\n{2}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    ss.str()
+            );
+        }
+
+        std::vector<std::unique_ptr<Statement>> statements;
     };
 
 } // namespace Statements
@@ -503,4 +528,5 @@ private:
     TokenList m_tokens;
     std::size_t m_current { 0 };
     bool m_hasError { false };
+    int current_function_end_depth { 0 };
 };

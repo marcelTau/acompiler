@@ -256,6 +256,12 @@ struct Resolver
         }
     }
 
+    void visit(Block& statement) override {
+        spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
+        // @todo maybe todo something here
+        resolve(statement.statements);
+    }
+
     // ====================================================================
     // Expressions
     // ====================================================================

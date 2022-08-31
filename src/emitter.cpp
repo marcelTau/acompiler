@@ -13,6 +13,11 @@ void Emitter::Emitter::visit(IfStatement& /* statement */) {
     assert(false && "If statement");
 }
 
+void Emitter::Emitter::visit(Block& /* statement */) {
+    spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+    assert(false && "Block statement");
+}
+
 void Emitter::Emitter::visit(VariableDefinition& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
 

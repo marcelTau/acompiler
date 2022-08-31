@@ -60,6 +60,7 @@ private:
     void visit(Statements::Return&              statement) override;
     void visit(Statements::Function&            statement) override;
     void visit(Statements::IfStatement&         statement) override;
+    void visit(Statements::Block&               statement) override;
 
     // ------------------------------------------------------------------------
     // Expressions

@@ -80,6 +80,7 @@ auto Parser::errorExpr(const Token& token, std::string_view msg) -> Result<UniqE
 
 /// --- Parsing functions --- ///
 auto Parser::declaration() -> Result<UniqStatement> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     if (checkAndAdvance(TokenType::Let)) {
         return varDeclaration();
     } else if (checkAndAdvance(TokenType::Fun)) {
@@ -91,6 +92,7 @@ auto Parser::declaration() -> Result<UniqStatement> {
 }
 
 auto Parser::function() -> Result<UniqStatement> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     auto name = consume(TokenType::Identifier, "Expect function name.");
     std::ignore = consume(TokenType::LeftParen, "Expect '(' after function name.");
 
@@ -132,6 +134,7 @@ auto Parser::function() -> Result<UniqStatement> {
                                                  return_datatype_name));
     }
 
+    current_function_end_depth = 0;
     auto block_stmts = block();
 
     if (!block_stmts) {
@@ -143,6 +146,7 @@ auto Parser::function() -> Result<UniqStatement> {
 }
 
 auto Parser::block() -> Result<std::vector<UniqStatement>> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     std::vector<UniqStatement> statements;
 
     // @todo this needs to change when there are other constructs that use the
@@ -159,6 +163,7 @@ auto Parser::block() -> Result<std::vector<UniqStatement>> {
 }
 
 auto Parser::statement() -> Result<UniqStatement> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     if (checkAndAdvance(TokenType::Print)) {
         return printStatement();
     }
@@ -171,16 +176,23 @@ auto Parser::statement() -> Result<UniqStatement> {
         return ifStatement();
     }
 
+    if (checkAndAdvance(TokenType::Then)) {
+        // @todo errorhandling
+        auto newBlock = std::make_unique<Statements::Block>(block().unwrap());
+        return Result<UniqStatement>(std::move(newBlock));
+    }
+
     return expressionStatement();
 }
 
 auto Parser::ifStatement() -> Result<UniqStatement> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     auto condition = expression();
     if (!condition) {
         return condition.get_err();
     }
 
-    std::ignore = consume(TokenType::Then, "Expect 'then' after if-condition.");
+    //std::ignore = consume(TokenType::Then, "Expect 'then' after if-condition.");
 
     auto then_branch = statement();
     if (!then_branch) {
@@ -203,6 +215,7 @@ auto Parser::ifStatement() -> Result<UniqStatement> {
 }
 
 auto Parser::returnStatement() -> Result<UniqStatement> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     std::unique_ptr<Expression> value;
     if (!check(TokenType::Semicolon)) {
         auto value_result = expression();
@@ -219,6 +232,7 @@ auto Parser::returnStatement() -> Result<UniqStatement> {
 }
 
 auto Parser::expressionStatement() -> Result<UniqStatement> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     auto expr = expression();
     if (!expr) {
         return expr.get_err();
@@ -230,6 +244,7 @@ auto Parser::expressionStatement() -> Result<UniqStatement> {
 }
 
 auto Parser::printStatement() -> Result<UniqStatement> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     auto expr = expression();
     if (!expr) {
         return expr.get_err();
@@ -241,6 +256,7 @@ auto Parser::printStatement() -> Result<UniqStatement> {
 }
 
 auto Parser::varDeclaration() -> Result<UniqStatement> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     const auto name = consume(TokenType::Identifier, "Expect variable name.");
 
     if (!name) {
@@ -286,10 +302,12 @@ auto Parser::varDeclaration() -> Result<UniqStatement> {
 }
 
 auto Parser::expression() -> Result<UniqExpression> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     return assignment();
 }
 
 auto Parser::assignment() -> Result<UniqExpression> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     auto expr = or_();
 
     if (!expr) {
@@ -314,6 +332,7 @@ auto Parser::assignment() -> Result<UniqExpression> {
 }
 
 auto Parser::or_() -> Result<UniqExpression> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     auto expr = and_();
     if (!expr) {
         return expr.get_err();
@@ -334,6 +353,7 @@ auto Parser::or_() -> Result<UniqExpression> {
 }
 
 auto Parser::and_() -> Result<UniqExpression> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     auto expr = equality();
     if (!expr) {
         return expr.get_err();
@@ -354,6 +374,7 @@ auto Parser::and_() -> Result<UniqExpression> {
 }
 
 auto Parser::equality() -> Result<UniqExpression> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     auto expr = comparison();
     if (!expr) {
         return expr.get_err();
@@ -374,6 +395,7 @@ auto Parser::equality() -> Result<UniqExpression> {
 }
 
 auto Parser::comparison() -> Result<UniqExpression> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     auto expr = term();
     if (!expr) {
         return expr.get_err();
@@ -394,6 +416,7 @@ auto Parser::comparison() -> Result<UniqExpression> {
 }
 
 auto Parser::term() -> Result<UniqExpression> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     auto expr = factor();
     if (!expr) {
         return expr.get_err();
@@ -415,6 +438,7 @@ auto Parser::term() -> Result<UniqExpression> {
 }
 
 auto Parser::factor() -> Result<UniqExpression> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     auto expr = unary();
     if (!expr) {
         return Result<UniqExpression>::Error(expr.get_err());
@@ -435,6 +459,7 @@ auto Parser::factor() -> Result<UniqExpression> {
 }
 
 auto Parser::unary() -> Result<UniqExpression> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     if (checkAndAdvance(TokenType::Bang, TokenType::Minus)) {
         auto op = previous();
         auto right = unary();
@@ -450,6 +475,7 @@ auto Parser::unary() -> Result<UniqExpression> {
 }
 
 auto Parser::primary() -> Result<UniqExpression> {
+    spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     if (checkAndAdvance(TokenType::Number)) {
         auto number = std::make_unique<Expressions::Number>(previous().lexeme);
         return Result<UniqExpression>(std::move(number));
