@@ -74,8 +74,17 @@ void Emitter::visit(ExpressionStatement& statement) {
     statement.expression->accept(*this);
 }
 
-void Emitter::visit(Print&  /*statement*/) {
+void Emitter::visit(Print& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+
+    // push result on stack
+    statement.expression->accept(*this);
+
+    auto reg = Register();
+    emit_line(fmt::format("  pop {:64}", reg));
+    emit_line(fmt::format("  mov rax, {:64}", reg));
+    emit_line(fmt::format("  call debug_print"));
+    emit_line(fmt::format("  push {:64}", reg));
 }
 
 void Emitter::visit(Return& statement) {

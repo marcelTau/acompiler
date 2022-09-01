@@ -100,6 +100,7 @@ void Resolver::visit(ExpressionStatement& statement) {
 
 void Resolver::visit(Print& statement) {
     spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
+    resolve(statement.expression);
 }
 
 /// When a new function is introduced to the scope

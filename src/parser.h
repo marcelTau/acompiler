@@ -132,7 +132,13 @@ namespace Statements {
         }
 
         [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            return fmt::format("PrintStatement: .expression {{ {} }}", expression->to_string());
+            return fmt::format(
+                    "{0:>{w}}PrintStatement:\n"
+                    "{0:>{w}}  .expression = {2}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    expression->to_string(offset + 4)
+            );
         }
 
         std::unique_ptr<Expression> expression;
