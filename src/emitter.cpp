@@ -86,6 +86,7 @@ void Emitter::visit(Return& statement) {
 
 void Emitter::visit(Function& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+
     // @todo pretty print the params of the function as comment above
     emit_line("");
     emit_line(fmt::format("{}:", statement.name.lexeme), "User defined function");
@@ -316,6 +317,11 @@ void Emitter::emit(const StatementList& statements) {
     emit_line("", "=== Auto-generated code ===");
 
     emit_line("%include \"asm/defines.inc\"", "bring syscall defines into scope");
+
+    emit_line("section .bss");
+    emit_line("  digitSpace resb 100", "Reserve bytes for debug print");
+    emit_line("  digitSpacePos resb 8", "Reserve bytes for pointer into digitSpace");
+
     emit_line("section .text", "begin source code segment");
     emit_line("global _start", "make entrypoint function visible to linker");
 

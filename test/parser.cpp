@@ -763,6 +763,41 @@ TEST(parser, simple_if_statement) {
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
+TEST(parser, simple_print_statement) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("print 10;");
+    auto stmts = p.parse(tokens);
+
+    auto expression = std::make_unique<Expressions::Number>("10");
+    auto printStmt = std::make_unique<Statements::Print>(std::move(expression));
+
+    expected.push_back(std::move(printStmt));
+
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, print_statement_with_expression) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("print 10 * 3;");
+    auto stmts = p.parse(tokens);
+
+    auto lhs = std::make_unique<Expressions::Number>("10");
+    auto op = Token{ .type = TokenType::Star, .lexeme = "*", .position = { .line = 1, .column = 10 }};
+    auto rhs = std::make_unique<Expressions::Number>("3");
+
+    auto expression = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), op, std::move(rhs));
+    auto printStmt = std::make_unique<Statements::Print>(std::move(expression));
+
+    expected.push_back(std::move(printStmt));
+
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+
 //TEST(parser, if_with_else) {
     //Scanner s;
     //Parser p;

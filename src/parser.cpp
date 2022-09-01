@@ -177,7 +177,7 @@ auto Parser::statement() -> Result<UniqStatement> {
     }
 
     if (checkAndAdvance(TokenType::Then)) {
-        // @todo errorhandling
+        // @todo errorhandling else statement fails here
         auto newBlock = std::make_unique<Statements::Block>(block().unwrap());
         return Result<UniqStatement>(std::move(newBlock));
     }
