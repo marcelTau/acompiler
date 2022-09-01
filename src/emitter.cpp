@@ -8,14 +8,42 @@ Emitter::Emitter(std::string filepath)
 {
 }
 
-void Emitter::Emitter::visit(IfStatement& /* statement */) {
+void Emitter::Emitter::visit(IfStatement& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
-    assert(false && "If statement");
+
+    // push result of condition on stack
+    statement.condition->accept(*this);
+
+    auto idx1 = getNextFreeRegister();
+    emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take condition result from stack");
+    emit_line(fmt::format("  cmp {}, 1", registerNames64[idx1]), "compare it to 1 to check if its true");
+
+    emit_line(fmt::format("  jne false", ""), "jump to false label if not true");
+
+    // then branch
+    statement.then_branch->accept(*this);
+
+    emit_line(fmt::format("  jmp continue", ""), "jump over the bad branch");
+
+    emit_line(fmt::format("false:"));
+
+    if (statement.else_branch) {
+        statement.else_branch->accept(*this);
+    }
+
+    emit_line(fmt::format("continue:"));
+
+    m_registers.flip(idx1);
 }
 
-void Emitter::Emitter::visit(Block& /* statement */) {
+void Emitter::Emitter::visit(Block& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
-    assert(false && "Block statement");
+
+    // @todo maybe something to do here
+    for (auto& s : statement.statements) {
+        s->accept(*this);
+    }
+    //assert(false && "Block statement");
 }
 
 void Emitter::Emitter::visit(VariableDefinition& statement) {

@@ -847,3 +847,105 @@ end
     e.emit(stmts);
     EXPECT_EQ(run_file(filepath), "1");
 }
+
+TEST(emitter, if_statement_simple_numbers_true) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    let x: Int = 5;
+    if 1 == 1 then
+        x = x + 2;
+    end
+    return x;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "7");
+}
+
+TEST(emitter, if_statement_simple_numbers_false) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    let x: Int = 5;
+    if 1 == 2 then
+        x = x + 2;
+    end
+    return x;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "5");
+}
+
+TEST(emitter, if_statement_simple_vars_false) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    let x: Int = 5;
+    let y: Int = 10;
+    if x == y then
+        x = x + 2;
+    end
+    return x;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "5");
+}
+
+TEST(emitter, if_statement_simple_vars_true) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    let x: Int = 5;
+    let y: Int = 2 + 3;
+    if x == y then
+        x = x + 2;
+    end
+    return x;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "7");
+}

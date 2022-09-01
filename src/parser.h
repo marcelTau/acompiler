@@ -480,6 +480,12 @@ public:
     using Expression = Expressions::Expression;
     using UniqExpression = std::unique_ptr<Expression>;
 
+    enum struct BlockType {
+        Function,
+        IfStatement,
+        Undefined,
+    };
+
 public:
     Parser() = default;
 
@@ -529,4 +535,5 @@ private:
     std::size_t m_current { 0 };
     bool m_hasError { false };
     int current_function_end_depth { 0 };
+    BlockType current_block_type = BlockType::Undefined;
 };

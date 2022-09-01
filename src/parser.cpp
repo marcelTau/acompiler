@@ -194,6 +194,7 @@ auto Parser::ifStatement() -> Result<UniqStatement> {
 
     //std::ignore = consume(TokenType::Then, "Expect 'then' after if-condition.");
 
+    //current_block_type = BlockType::IfStatement;
     auto then_branch = statement();
     if (!then_branch) {
         return then_branch.get_err();
