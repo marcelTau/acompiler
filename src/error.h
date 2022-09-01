@@ -52,14 +52,16 @@ struct Result {
         return std::get<struct Error>(value);
     }
 
-    T unwrap(/*const std::source_location& loc = std::source_location::current()*/) {
+    T unwrap(const std::source_location& loc = std::source_location::current()) {
         if (std::holds_alternative<struct Error>(value)) {
+            fmt::print(stderr, "Panic at unwrap(): {} [{},{}] at {}", loc.file_name(), loc.line(), loc.column(), loc.function_name());
             assert(false && "1");
         }
         return std::move(std::get<T>(value));
     }
-    T unwrap(/*const std::source_location& loc = std::source_location::current()*/) const {
+    T unwrap(const std::source_location& loc = std::source_location::current()) const {
         if (std::holds_alternative<struct Error>(value)) {
+            fmt::print(stderr, "Panic at unwrap(): {} [{},{}] at {}", loc.file_name(), loc.line(), loc.column(), loc.function_name());
             assert(false && "1");
         }
         return std::move(std::get<T>(value));
