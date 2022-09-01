@@ -16,6 +16,8 @@ set(SOURCES
     src/resolver.h
     src/resolver.cpp
 
+    src/register.h
+
     src/emitter.cpp
     src/emitter.h
 

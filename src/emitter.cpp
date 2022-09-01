@@ -1,4 +1,5 @@
 #include "emitter.h"
+#include "register.h"
 
 using namespace Statements;
 using namespace Expressions;
@@ -18,9 +19,9 @@ void Emitter::Emitter::visit(IfStatement& statement) {
     // push result of condition on stack
     statement.condition->accept(*this);
 
-    auto idx1 = getNextFreeRegister();
-    emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take condition result from stack");
-    emit_line(fmt::format("  cmp {}, 1", registerNames64[idx1]), "compare it to 1 to check if its true");
+    auto reg = Register();
+    emit_line(fmt::format("  pop {:64}", reg), "take condition result from stack");
+    emit_line(fmt::format("  cmp {:64}, 1", reg), "compare it to 1 to check if its true");
 
     auto false_label = getLabelName();
     emit_line(fmt::format("  jne {}", false_label), "jump to false label if not true");
@@ -38,8 +39,6 @@ void Emitter::Emitter::visit(IfStatement& statement) {
     }
 
     emit_line(fmt::format("{}:", continue_label));
-
-    m_registers.flip(idx1);
 }
 
 void Emitter::Emitter::visit(Block& statement) {
@@ -49,7 +48,6 @@ void Emitter::Emitter::visit(Block& statement) {
     for (auto& s : statement.statements) {
         s->accept(*this);
     }
-    //assert(false && "Block statement");
 }
 
 void Emitter::Emitter::visit(VariableDefinition& statement) {
@@ -58,18 +56,15 @@ void Emitter::Emitter::visit(VariableDefinition& statement) {
     // push initializer value on stack
     statement.initializer->accept(*this);
 
-    //current_function_stack_offset += (int)statement.initializer->datatype.size;
+    // @todo maybe change back ? current_function_stack_offset += (int)statement.initializer->datatype.size;
     current_function_stack_offset += (int)statement.datatype.size;
     statement.offset = current_function_stack_offset;
 
-    auto idx1 = getNextFreeRegister();
-    emit_line(fmt::format("  pop {}", registerNames64[idx1]), "pop initializer into register");
-    emit_line(fmt::format("  mov QWORD [rbp - {:#x}], {}", statement.offset, registerNames64[idx1]), "store initializer on stack");
+    auto reg = Register();
+    emit_line(fmt::format("  pop {:64}", reg), "pop initializer into register");
+    emit_line(fmt::format("  mov QWORD [rbp - {:#x}], {:64}", statement.offset, reg), "store initializer on stack");
 
     environment.define(statement.name.getLexeme(), std::make_shared<VariableDefinition>(statement));
-
-    // cleanup registers
-    m_registers.flip(idx1);
 }
 
 void Emitter::visit(ExpressionStatement& statement) {
@@ -122,12 +117,11 @@ void Emitter::visit(Assignment& expression) {
         // put value on the stack
         expression.value->accept(*this);
 
-        auto idx1 = getNextFreeRegister();
-        emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take new value from stack");
+        auto reg = Register();
+        emit_line(fmt::format("  pop {:64}", reg), "take new value from stack");
 
         // assign new value to variable
-        emit_line(fmt::format("  mov QWORD [rbp - {:#x}], {}", offset, registerNames64[idx1]), "move new value into old position in stack");
-        m_registers.flip(idx1);
+        emit_line(fmt::format("  mov QWORD [rbp - {:#x}], {:64}", offset, reg), "move new value into old position in stack");
     }
     spdlog::info(fmt::format("Done: Emitter: {}", __PRETTY_FUNCTION__));
 }
@@ -142,158 +136,99 @@ void Emitter::visit(BinaryOperator& expression) {
 
     switch (expression.operator_type.type) {
         case TokenType::Plus: {
-            auto idx1 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
+            auto reg1 = Register();
+            auto reg2 = Register();
 
-            auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take second value from stack");
-
-            // do the addition and push result on stack
-            emit_line(fmt::format("  add {}, {}", registerNames64[idx1], registerNames64[idx2]));
-            emit_line(fmt::format("  push {}", registerNames64[idx1]));
-
-            // clear the used registers
-            m_registers.flip(idx1);
-            m_registers.flip(idx2);
+            emit_line(fmt::format("  pop {:64}", reg1), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {:64}", reg2), "take second value from stack");
+            emit_line(fmt::format("  add {:64}, {:64}", reg1, reg2));
+            emit_line(fmt::format("  push {:64}", reg1));
             break;
         }
         case TokenType::Minus: {
-            auto idx1 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
-
-            auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take second value from stack");
-
-            // do the subtraction and push result on stack
-            emit_line(fmt::format("  sub {}, {}", registerNames64[idx2], registerNames64[idx1]));
-            emit_line(fmt::format("  push {}", registerNames64[idx2]));
-
-            // clear the used registers
-            m_registers.flip(idx1);
-            m_registers.flip(idx2);
+            auto reg1 = Register();
+            auto reg2 = Register();
+            emit_line(fmt::format("  pop {:64}", reg1), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {:64}", reg2), "take second value from stack");
+            emit_line(fmt::format("  sub {:64}, {:64}", reg2, reg1));
+            emit_line(fmt::format("  push {:64}", reg2));
             break;
         }
         case TokenType::Star: {
-            auto idx1 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
-
+            auto reg = Register();
+            emit_line(fmt::format("  pop {:64}", reg), "take value from stack into first free register");
             emit_line(fmt::format("  pop rax"), "take second value from stack");
-
-            emit_line(fmt::format("  mul {}", registerNames64[idx1]));
-
-            // @todo if i need to keep rax consistent, then push it in the beginning and pop it at the end, therefore mov <free_register>, rax before
+            emit_line(fmt::format("  mul {:64}", reg));
             emit_line(fmt::format("  push rax"));
-
-            // clear the used registers
-            m_registers.flip(idx1);
-
             break;
         }
         case TokenType::Slash: {
-
+            auto reg = Register();
             emit_line("  xor rdx, rdx", "set rdx to 0 so it does not mess with the division");
-            auto idx1 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {:64}", reg), "take value from stack into first free register");
             emit_line(fmt::format("  pop rax"), "take second value from stack");
-
-
-            emit_line(fmt::format("  div {}", registerNames64[idx1]));
-
-            // @todo if i need to keep rax consistent, then push it in the beginning and pop it at the end, therefore mov <free_register>, rax before
+            emit_line(fmt::format("  div {:64}", reg));
             emit_line(fmt::format("  push rax"));
-
-            // clear the used registers
-            m_registers.flip(idx1);
-
             break;
         }
         case TokenType::EqualEqual: {
-            auto idx1 = getNextFreeRegister();
-            auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
-            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
-
-            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
-            emit_line(fmt::format("  sete {}", registerNames8[idx1]), "Sets register to 1 if comparison is equal");
-            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
-
-            m_registers.flip(idx1);
-            m_registers.flip(idx2);
+            auto reg1 = Register();
+            auto reg2 = Register();
+            emit_line(fmt::format("  pop {:64}", reg1), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {:64}", reg2), "take value from stack into first free register");
+            emit_line(fmt::format("  cmp {:64}, {:64}", reg1, reg2), "do the comparison");
+            emit_line(fmt::format("  sete {:8}", reg1), "Sets register to 1 if comparison is equal");
+            emit_line(fmt::format("  push {:64}", reg1), "push result of comparion on stack");
             break;
         }
         case TokenType::BangEqual: {
-            auto idx1 = getNextFreeRegister();
-            auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
-            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
-
-            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
-
-            emit_line(fmt::format("  setne {}", registerNames8[idx1]), "Sets register to 1 if comparison is not equal");
-            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
-
-            m_registers.flip(idx1);
-            m_registers.flip(idx2);
+            auto reg1 = Register();
+            auto reg2 = Register();
+            emit_line(fmt::format("  pop {:64}", reg1), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {:64}", reg2), "take value from stack into first free register");
+            emit_line(fmt::format("  cmp {:64}, {:64}", reg1, reg2), "do the comparison");
+            emit_line(fmt::format("  setne {:8}", reg1), "Sets register to 1 if comparison is not equal");
+            emit_line(fmt::format("  push {:64}", reg1), "push result of comparion on stack");
             break;
         }
         case TokenType::Less: {
-            auto idx1 = getNextFreeRegister();
-            auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
-            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
-
-            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
-
-            emit_line(fmt::format("  setl {}", registerNames8[idx1]), "Sets register to 1 if comparison is lower");
-            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
-
-            m_registers.flip(idx1);
-            m_registers.flip(idx2);
+            auto reg1 = Register();
+            auto reg2 = Register();
+            emit_line(fmt::format("  pop {:64}", reg2), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {:64}", reg1), "take value from stack into first free register");
+            emit_line(fmt::format("  cmp {:64}, {:64}", reg1, reg2), "do the comparison");
+            emit_line(fmt::format("  setl {:8}", reg1), "Sets register to 1 if comparison is lower");
+            emit_line(fmt::format("  push {:64}", reg1), "push result of comparion on stack");
             break;
         }
         case TokenType::LessEqual: {
-            auto idx1 = getNextFreeRegister();
-            auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
-            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
-
-            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
-
-            emit_line(fmt::format("  setle {}", registerNames8[idx1]), "Sets register to 1 if comparison is lower");
-            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
-
-            m_registers.flip(idx1);
-            m_registers.flip(idx2);
+            auto reg1 = Register();
+            auto reg2 = Register();
+            emit_line(fmt::format("  pop {:64}", reg2), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {:64}", reg1), "take value from stack into first free register");
+            emit_line(fmt::format("  cmp {:64}, {:64}", reg1, reg2), "do the comparison");
+            emit_line(fmt::format("  setle {:8}", reg1), "Sets register to 1 if comparison is lower");
+            emit_line(fmt::format("  push {:64}", reg1), "push result of comparion on stack");
             break;
         }
         case TokenType::Greater: {
-            auto idx1 = getNextFreeRegister();
-            auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
-            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
-
-            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
-
-            emit_line(fmt::format("  setg {}", registerNames8[idx1]), "Sets register to 1 if comparison is lower");
-            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
-
-            m_registers.flip(idx1);
-            m_registers.flip(idx2);
+            auto reg1 = Register();
+            auto reg2 = Register();
+            emit_line(fmt::format("  pop {:64}", reg2), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {:64}", reg1), "take value from stack into first free register");
+            emit_line(fmt::format("  cmp {:64}, {:64}", reg1, reg2), "do the comparison");
+            emit_line(fmt::format("  setg {:8}", reg1), "Sets register to 1 if comparison is lower");
+            emit_line(fmt::format("  push {:64}", reg1), "push result of comparion on stack");
             break;
         }
         case TokenType::GreaterEqual: {
-            auto idx1 = getNextFreeRegister();
-            auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
-            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
-
-            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
-
-            emit_line(fmt::format("  setge {}", registerNames8[idx1]), "Sets register to 1 if comparison is lower");
-            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
-
-            m_registers.flip(idx1);
-            m_registers.flip(idx2);
+            auto reg1 = Register();
+            auto reg2 = Register();
+            emit_line(fmt::format("  pop {:64}", reg2), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {:64}", reg1), "take value from stack into first free register");
+            emit_line(fmt::format("  cmp {:64}, {:64}", reg1, reg2), "do the comparison");
+            emit_line(fmt::format("  setge {:8}", reg1), "Sets register to 1 if comparison is lower");
+            emit_line(fmt::format("  push {:64}", reg1), "push result of comparion on stack");
             break;
         }
         default:
@@ -324,11 +259,9 @@ void Emitter::visit(Variable& expression) {
         if (offset == -1) {
             std::get<std::shared_ptr<VariableDefinition>>(var)->initializer->accept(*this);
         } else {
-            auto idx1 = getNextFreeRegister();
-            emit_line(fmt::format("  mov QWORD {}, [rbp - {:#x}]", registerNames64[idx1], offset), "take value of variable out of stack");
-            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push in onto the stack");
-            //emit_line(fmt::format("  mov rax, {}", registerNames[idx1]), "put it in rax");
-            m_registers.flip(idx1);
+            auto reg = Register();
+            emit_line(fmt::format("  mov QWORD {:64}, [rbp - {:#x}]", reg, offset), "take value of variable out of stack");
+            emit_line(fmt::format("  push {:64}", reg), "push in onto the stack");
         }
     } else {
         assert(false && "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk");
@@ -410,16 +343,6 @@ void Emitter::emit_line(std::string_view line, std::string_view comment) {
 void Emitter::emit_statement(const std::unique_ptr<Statement>& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     statement->accept(*this);
-}
-
-std::size_t Emitter::getNextFreeRegister() {
-    for (std::size_t idx = Register::R8; idx <= Register::R15; ++idx) {
-        if (!m_registers.test(idx)) {
-            m_registers.set(idx);
-            return idx;
-        }
-    }
-    assert(false && "getNextFreeRegister");
 }
 
 std::string Emitter::getLabelName() {
