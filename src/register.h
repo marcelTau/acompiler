@@ -124,7 +124,7 @@ private:
         "MAX_COUNT",
     };
 
-    static std::bitset<15> m_registers;
+    static std::bitset<Register::Reg::MAX_COUNT> m_registers;
 
     std::size_t idx { 0 };
 };
