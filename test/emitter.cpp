@@ -8,8 +8,6 @@
 
 static constexpr const char * const bin_path = "/tmp/asm_output";
 
-using Resovler::Resolver;
-
 std::string run_file(std::string_view filepath) {
     std::string out_path { filepath };
     out_path += ".tmp";

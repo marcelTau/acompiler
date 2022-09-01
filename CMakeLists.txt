@@ -13,6 +13,9 @@ set(SOURCES
     src/parser.cpp
     src/parser.h
 
+    src/resolver.h
+    src/resolver.cpp
+
     src/emitter.cpp
     src/emitter.h
 

@@ -44,7 +44,7 @@ struct Compiler {
             fmt::print("{}\n", statement->to_string());
         }
 
-        Resovler::Resolver resolver;
+        Resolver resolver;
 
         try {
             resolver.resolve(statements);
