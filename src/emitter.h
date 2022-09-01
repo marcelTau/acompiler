@@ -44,10 +44,7 @@ private:
 
 
 private:
-    //[[nodiscard]] std::size_t getNextFreeRegister();
-
     std::string filepath;
-    //std::bitset<Register::MAX_COUNT> m_registers {};
     std::stringstream output {};
     Environment<ValueVariant> environment;
     Environment<ValueVariant> globals;

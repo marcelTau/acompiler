@@ -949,3 +949,55 @@ end
     e.emit(stmts);
     EXPECT_EQ(run_file(filepath), "7");
 }
+
+TEST(emitter, if_statement_simple_with_boolean_value_true) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    let x: Int = 5;
+    let is_true: Bool = true;
+    if is_true then
+        x = x + 2;
+    end
+    return x;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "7");
+}
+
+TEST(emitter, if_statement_simple_with_boolean_value_false) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    let x: Int = 5;
+    let is_false: Bool = false;
+    if is_false then
+        x = x + 2;
+    end
+    return x;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "5");
+}
