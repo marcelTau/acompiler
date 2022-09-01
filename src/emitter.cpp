@@ -213,6 +213,51 @@ void Emitter::visit(BinaryOperator& expression) {
             m_registers.flip(idx2);
             break;
         }
+        case TokenType::LessEqual: {
+            auto idx1 = getNextFreeRegister();
+            auto idx2 = getNextFreeRegister();
+            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
+
+            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
+
+            emit_line(fmt::format("  setle {}", registerNames8[idx1]), "Sets register to 1 if comparison is lower");
+            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
+
+            m_registers.flip(idx1);
+            m_registers.flip(idx2);
+            break;
+        }
+        case TokenType::Greater: {
+            auto idx1 = getNextFreeRegister();
+            auto idx2 = getNextFreeRegister();
+            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
+
+            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
+
+            emit_line(fmt::format("  setg {}", registerNames8[idx1]), "Sets register to 1 if comparison is lower");
+            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
+
+            m_registers.flip(idx1);
+            m_registers.flip(idx2);
+            break;
+        }
+        case TokenType::GreaterEqual: {
+            auto idx1 = getNextFreeRegister();
+            auto idx2 = getNextFreeRegister();
+            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
+
+            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
+
+            emit_line(fmt::format("  setge {}", registerNames8[idx1]), "Sets register to 1 if comparison is lower");
+            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
+
+            m_registers.flip(idx1);
+            m_registers.flip(idx2);
+            break;
+        }
         default:
             fmt::print(stderr, "Emitter: {}", expression.operator_type);
             assert(false && "Emitter: BinaryOperator");
