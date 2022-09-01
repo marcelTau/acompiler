@@ -8,6 +8,10 @@ Emitter::Emitter(std::string filepath)
 {
 }
 
+// ------------------------------------------------------------------------
+// Statements
+// ------------------------------------------------------------------------
+
 void Emitter::Emitter::visit(IfStatement& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
 
@@ -18,20 +22,22 @@ void Emitter::Emitter::visit(IfStatement& statement) {
     emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take condition result from stack");
     emit_line(fmt::format("  cmp {}, 1", registerNames64[idx1]), "compare it to 1 to check if its true");
 
-    emit_line(fmt::format("  jne false", ""), "jump to false label if not true");
+    auto false_label = getLabelName();
+    emit_line(fmt::format("  jne {}", false_label), "jump to false label if not true");
 
     // then branch
     statement.then_branch->accept(*this);
 
-    emit_line(fmt::format("  jmp continue", ""), "jump over the bad branch");
+    auto continue_label = getLabelName();
+    emit_line(fmt::format("  jmp {}", continue_label), "jump over the bad branch");
 
-    emit_line(fmt::format("false:"));
+    emit_line(fmt::format("{}:", false_label));
 
     if (statement.else_branch) {
         statement.else_branch->accept(*this);
     }
 
-    emit_line(fmt::format("continue:"));
+    emit_line(fmt::format("{}:", continue_label));
 
     m_registers.flip(idx1);
 }
@@ -101,6 +107,10 @@ void Emitter::visit(Function& statement) {
     emit_line("  pop rbp", "get rbp back, since it is callee saved");
     emit_line("  ret");
 }
+
+// ------------------------------------------------------------------------
+// Expressions
+// ------------------------------------------------------------------------
 
 void Emitter::visit(Assignment& expression) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
@@ -410,4 +420,8 @@ std::size_t Emitter::getNextFreeRegister() {
         }
     }
     assert(false && "getNextFreeRegister");
+}
+
+std::string Emitter::getLabelName() {
+    return ".L" + std::to_string(++label_counter);
 }

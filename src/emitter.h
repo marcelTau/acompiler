@@ -98,8 +98,10 @@ private:
     // ------------------------------------------------------------------------
     [[nodiscard]] ValueVariant lookup_variable(const Expressions::Variable& var);
     [[nodiscard]] ValueVariant lookup_variable(const Expressions::Assignment& var);
+    [[nodiscard]] std::string getLabelName();
     void emit_line(std::string_view line, std::string_view comment = "");
     void emit_statement(const std::unique_ptr<Statements::Statement>& statement);
+
 
 private:
     [[nodiscard]] std::size_t getNextFreeRegister();
@@ -110,4 +112,5 @@ private:
     Environment<ValueVariant> environment;
     Environment<ValueVariant> globals;
     int current_function_stack_offset { 0 };
+    int label_counter { 0 };
 };
