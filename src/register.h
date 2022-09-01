@@ -1,7 +1,7 @@
 #include <bitset>
 #include <fmt/format.h>
 
-static std::bitset<15> m_registers;
+
 struct Register {
     enum Reg {
         RAX,
@@ -25,8 +25,8 @@ struct Register {
 
     Register() {
         for (idx = Reg::R8; idx <= Reg::R15; ++idx) {
-            if (!m_registers.test(idx)) {
-                m_registers.set(idx);
+            if (!Register::m_registers.test(idx)) {
+                Register::m_registers.set(idx);
                 break;
             }
         }
@@ -34,11 +34,11 @@ struct Register {
 
     Register(Reg reg) {
         idx = reg;
-        m_registers.set(idx);
+        Register::m_registers.set(idx);
     }
 
     ~Register() {
-        m_registers.flip(idx);
+        Register::m_registers.flip(idx);
     }
 
     friend struct fmt::formatter<Register>;
@@ -124,6 +124,7 @@ private:
         "MAX_COUNT",
     };
 
+    static std::bitset<15> m_registers;
 
     std::size_t idx { 0 };
 };

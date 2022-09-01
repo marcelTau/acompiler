@@ -4,6 +4,8 @@
 using namespace Statements;
 using namespace Expressions;
 
+std::bitset<15> Register::m_registers {};
+
 Emitter::Emitter(std::string filepath)
     : filepath(std::move(filepath))
 {
