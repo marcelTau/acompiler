@@ -575,3 +575,91 @@ end
     e.emit(stmts);
     EXPECT_EQ(run_file(filepath), "1");
 }
+
+TEST(emitter, return_comparison_less_true) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    return 1 < 2;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "1");
+}
+
+TEST(emitter, return_comparison_less_false) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    return 2 < 1;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "0");
+}
+
+TEST(emitter, return_comparison_less_true_with_variables) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    let x: Int = 1;
+    let y: Int = x + 1;
+    return x < y;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "1");
+}
+
+TEST(emitter, return_comparison_less_false_with_variables) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    let x: Int = 1;
+    let y: Int = x + 1;
+    return y < x;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "0");
+}

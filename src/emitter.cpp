@@ -24,12 +24,13 @@ void Emitter::Emitter::visit(VariableDefinition& statement) {
     // push initializer value on stack
     statement.initializer->accept(*this);
 
-    current_function_stack_offset += (int)statement.initializer->datatype.size;
+    //current_function_stack_offset += (int)statement.initializer->datatype.size;
+    current_function_stack_offset += (int)statement.datatype.size;
     statement.offset = current_function_stack_offset;
 
     auto idx1 = getNextFreeRegister();
-    emit_line(fmt::format("  pop {}", registerNames[idx1]), "pop initializer into register");
-    emit_line(fmt::format("  mov QWORD [rbp - {:#x}], {}", statement.offset, registerNames[idx1]), "store initializer on stack");
+    emit_line(fmt::format("  pop {}", registerNames64[idx1]), "pop initializer into register");
+    emit_line(fmt::format("  mov QWORD [rbp - {:#x}], {}", statement.offset, registerNames64[idx1]), "store initializer on stack");
 
     environment.define(statement.name.getLexeme(), std::make_shared<VariableDefinition>(statement));
 
@@ -84,10 +85,10 @@ void Emitter::visit(Assignment& expression) {
         expression.value->accept(*this);
 
         auto idx1 = getNextFreeRegister();
-        emit_line(fmt::format("  pop {}", registerNames[idx1]), "take new value from stack");
+        emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take new value from stack");
 
         // assign new value to variable
-        emit_line(fmt::format("  mov QWORD [rbp - {:#x}], {}", offset, registerNames[idx1]), "move new value into old position in stack");
+        emit_line(fmt::format("  mov QWORD [rbp - {:#x}], {}", offset, registerNames64[idx1]), "move new value into old position in stack");
         m_registers.flip(idx1);
     }
     spdlog::info(fmt::format("Done: Emitter: {}", __PRETTY_FUNCTION__));
@@ -104,14 +105,14 @@ void Emitter::visit(BinaryOperator& expression) {
     switch (expression.operator_type.type) {
         case TokenType::Plus: {
             auto idx1 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
 
             auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames[idx2]), "take second value from stack");
+            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take second value from stack");
 
             // do the addition and push result on stack
-            emit_line(fmt::format("  add {}, {}", registerNames[idx1], registerNames[idx2]));
-            emit_line(fmt::format("  push {}", registerNames[idx1]));
+            emit_line(fmt::format("  add {}, {}", registerNames64[idx1], registerNames64[idx2]));
+            emit_line(fmt::format("  push {}", registerNames64[idx1]));
 
             // clear the used registers
             m_registers.flip(idx1);
@@ -120,14 +121,14 @@ void Emitter::visit(BinaryOperator& expression) {
         }
         case TokenType::Minus: {
             auto idx1 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
 
             auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames[idx2]), "take second value from stack");
+            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take second value from stack");
 
             // do the subtraction and push result on stack
-            emit_line(fmt::format("  sub {}, {}", registerNames[idx2], registerNames[idx1]));
-            emit_line(fmt::format("  push {}", registerNames[idx2]));
+            emit_line(fmt::format("  sub {}, {}", registerNames64[idx2], registerNames64[idx1]));
+            emit_line(fmt::format("  push {}", registerNames64[idx2]));
 
             // clear the used registers
             m_registers.flip(idx1);
@@ -136,11 +137,11 @@ void Emitter::visit(BinaryOperator& expression) {
         }
         case TokenType::Star: {
             auto idx1 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
 
             emit_line(fmt::format("  pop rax"), "take second value from stack");
 
-            emit_line(fmt::format("  mul {}", registerNames[idx1]));
+            emit_line(fmt::format("  mul {}", registerNames64[idx1]));
 
             // @todo if i need to keep rax consistent, then push it in the beginning and pop it at the end, therefore mov <free_register>, rax before
             emit_line(fmt::format("  push rax"));
@@ -154,11 +155,11 @@ void Emitter::visit(BinaryOperator& expression) {
 
             emit_line("  xor rdx, rdx", "set rdx to 0 so it does not mess with the division");
             auto idx1 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
             emit_line(fmt::format("  pop rax"), "take second value from stack");
 
 
-            emit_line(fmt::format("  div {}", registerNames[idx1]));
+            emit_line(fmt::format("  div {}", registerNames64[idx1]));
 
             // @todo if i need to keep rax consistent, then push it in the beginning and pop it at the end, therefore mov <free_register>, rax before
             emit_line(fmt::format("  push rax"));
@@ -171,16 +172,12 @@ void Emitter::visit(BinaryOperator& expression) {
         case TokenType::EqualEqual: {
             auto idx1 = getNextFreeRegister();
             auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
-            emit_line(fmt::format("  pop {}", registerNames[idx2]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
 
-            emit_line(fmt::format("  cmp {}, {}", registerNames[idx1], registerNames[idx2]), "do the comparison");
-            emit_line(fmt::format("  jne bad"), "jump to bad label if values are not equal");
-            emit_line(fmt::format("  push 1"), "values are the same");
-            emit_line(fmt::format("  jmp continue"), "jump over the bad branch");
-            emit_line(fmt::format("bad:"));
-            emit_line(fmt::format("  push 0"), "values are not the same");
-            emit_line(fmt::format("continue:"), "label after the bad branch");
+            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
+            emit_line(fmt::format("  sete {}", registerNames8[idx1]), "Sets register to 1 if comparison is equal");
+            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
 
             m_registers.flip(idx1);
             m_registers.flip(idx2);
@@ -189,16 +186,28 @@ void Emitter::visit(BinaryOperator& expression) {
         case TokenType::BangEqual: {
             auto idx1 = getNextFreeRegister();
             auto idx2 = getNextFreeRegister();
-            emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
-            emit_line(fmt::format("  pop {}", registerNames[idx2]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
 
-            emit_line(fmt::format("  cmp {}, {}", registerNames[idx1], registerNames[idx2]), "do the comparison");
-            emit_line(fmt::format("  je bad"), "jump to bad label if values are not equal");
-            emit_line(fmt::format("  push 1"), "values are the same");
-            emit_line(fmt::format("  jmp continue"), "jump over the bad branch");
-            emit_line(fmt::format("bad:"));
-            emit_line(fmt::format("  push 0"), "values are not the same");
-            emit_line(fmt::format("continue:"), "label after the bad branch");
+            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
+
+            emit_line(fmt::format("  setne {}", registerNames8[idx1]), "Sets register to 1 if comparison is not equal");
+            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
+
+            m_registers.flip(idx1);
+            m_registers.flip(idx2);
+            break;
+        }
+        case TokenType::Less: {
+            auto idx1 = getNextFreeRegister();
+            auto idx2 = getNextFreeRegister();
+            emit_line(fmt::format("  pop {}", registerNames64[idx2]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames64[idx1]), "take value from stack into first free register");
+
+            emit_line(fmt::format("  cmp {}, {}", registerNames64[idx1], registerNames64[idx2]), "do the comparison");
+
+            emit_line(fmt::format("  setl {}", registerNames8[idx1]), "Sets register to 1 if comparison is lower");
+            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push result of comparion on stack");
 
             m_registers.flip(idx1);
             m_registers.flip(idx2);
@@ -233,8 +242,8 @@ void Emitter::visit(Variable& expression) {
             std::get<std::shared_ptr<VariableDefinition>>(var)->initializer->accept(*this);
         } else {
             auto idx1 = getNextFreeRegister();
-            emit_line(fmt::format("  mov QWORD {}, [rbp - {:#x}]", registerNames[idx1], offset), "take value of variable out of stack");
-            emit_line(fmt::format("  push {}", registerNames[idx1]), "push in onto the stack");
+            emit_line(fmt::format("  mov QWORD {}, [rbp - {:#x}]", registerNames64[idx1], offset), "take value of variable out of stack");
+            emit_line(fmt::format("  push {}", registerNames64[idx1]), "push in onto the stack");
             //emit_line(fmt::format("  mov rax, {}", registerNames[idx1]), "put it in rax");
             m_registers.flip(idx1);
         }

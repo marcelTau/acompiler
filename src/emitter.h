@@ -30,7 +30,7 @@ struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVis
         MAX_COUNT,
     };
 
-    static constexpr std::array registerNames {
+    static constexpr std::array registerNames64 {
         "rax",
         "rbx",
         "rcx",
@@ -47,6 +47,26 @@ struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVis
         "r13",
         "r14",
         "r15",
+        "MAX_COUNT",
+    };
+
+    static constexpr std::array registerNames8 {
+        "al",
+        "bl",
+        "cl",
+        "dl",
+        "spl",
+        "bpl",
+        "sil",
+        "dil",
+        "r8b",
+        "r9b",
+        "r10b",
+        "r11b",
+        "r12b",
+        "r13b",
+        "r14b",
+        "r15b",
         "MAX_COUNT",
     };
 
