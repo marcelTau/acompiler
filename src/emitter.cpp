@@ -186,6 +186,24 @@ void Emitter::visit(BinaryOperator& expression) {
             m_registers.flip(idx2);
             break;
         }
+        case TokenType::BangEqual: {
+            auto idx1 = getNextFreeRegister();
+            auto idx2 = getNextFreeRegister();
+            emit_line(fmt::format("  pop {}", registerNames[idx1]), "take value from stack into first free register");
+            emit_line(fmt::format("  pop {}", registerNames[idx2]), "take value from stack into first free register");
+
+            emit_line(fmt::format("  cmp {}, {}", registerNames[idx1], registerNames[idx2]), "do the comparison");
+            emit_line(fmt::format("  je bad"), "jump to bad label if values are not equal");
+            emit_line(fmt::format("  push 1"), "values are the same");
+            emit_line(fmt::format("  jmp continue"), "jump over the bad branch");
+            emit_line(fmt::format("bad:"));
+            emit_line(fmt::format("  push 0"), "values are not the same");
+            emit_line(fmt::format("continue:"), "label after the bad branch");
+
+            m_registers.flip(idx1);
+            m_registers.flip(idx2);
+            break;
+        }
         default:
             fmt::print(stderr, "Emitter: {}", expression.operator_type);
             assert(false && "Emitter: BinaryOperator");
