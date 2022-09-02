@@ -22,7 +22,8 @@ private:
     };
 
 public:
-    Resolver() = default;
+    Resolver();
+    //Resolver() = default;
 
     // ====================================================================
     // Resolves
@@ -33,6 +34,7 @@ public:
     void resolve(const std::unique_ptr<Statements::Statement>& statement);
     void resolve(Expressions::Variable& value, const Token& name);
     void resolve(Expressions::Assignment& value, const Token& name);
+    void resolve(Expressions::FunctionCall& value, const Token& name);
 
     // ====================================================================
     // Statements
@@ -55,6 +57,7 @@ public:
     void visit(Expressions::Variable&           expression) override;
     void visit(Expressions::Unary&              expression) override;
     void visit(Expressions::Logical&            expression) override;
+    void visit(Expressions::FunctionCall&       expression) override;
 
     // ====================================================================
     // Helper functions

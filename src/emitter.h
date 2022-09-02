@@ -32,6 +32,7 @@ private:
     void visit(Expressions::Variable&           expression) override;
     void visit(Expressions::Unary&              expression) override;
     void visit(Expressions::Logical&            expression) override;
+    void visit(Expressions::FunctionCall&       expression) override;
 
     // ------------------------------------------------------------------------
     // Helper Functions

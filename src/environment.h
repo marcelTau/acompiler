@@ -11,7 +11,8 @@
 using ValueVariant = std::variant<
     std::shared_ptr<Statements::VariableDefinition>,
     std::shared_ptr<Expressions::Variable>,
-    std::shared_ptr<Statements::Function>
+    std::shared_ptr<Statements::Function>,
+    std::shared_ptr<Expressions::FunctionCall>
 >;
 
 struct ValuePrintVisitor {

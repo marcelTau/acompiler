@@ -84,18 +84,19 @@ namespace Statements {
         {
         }
         
-
         [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
             return fmt::format(
                     "{0:>{w}}VariableDefinition:\n"
                     "{0:>{w}}  .name = {2}\n"
                     "{0:>{w}}  .initializer =\n{3}\n"
-                    "{0:>{w}}  .datatype = {4}\n",
+                    "{0:>{w}}  .datatype = {4}\n"
+                    "{0:>{w}}  .scope_distance = {5}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
                     name,
                     initializer ? initializer->to_string(offset + 4) : "nullptr",
-                    datatype.to_string()
+                    datatype.to_string(),
+                    scope_distance
             );
         }
 
@@ -166,13 +167,15 @@ namespace Statements {
                     "{0:>{w}}  .returntype = {2}\n"
                     "{0:>{w}}  .name = {3}\n"
                     "{0:>{w}}  .params = {4}\n"
-                    "{0:>{w}}  .body = \n{5}\n",
+                    "{0:>{w}}  .body = \n{5}\n"
+                    "{0:>{w}}  .scope_distance = {6}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
                     return_datatype.to_string(),
                     name,
                     fmt::join(params, ", "),
-                    ss.str()
+                    ss.str(),
+                    scope_distance
             );
         }
 
@@ -181,6 +184,7 @@ namespace Statements {
         std::vector<std::unique_ptr<Statement>> body;
         std::size_t stack_size { 0 };
         DataType return_datatype;
+        int scope_distance { -1 };
     };
 
     struct Return : public StatementAcceptor<Return> {
@@ -200,32 +204,6 @@ namespace Statements {
         }
 
         std::unique_ptr<Expression> value;
-    };
-
-    struct IfStatement : public StatementAcceptor<IfStatement> {
-        IfStatement(std::unique_ptr<Expression> condition, std::unique_ptr<Statement> then_branch, std::unique_ptr<Statement> else_branch)
-            : condition(std::move(condition))
-            , then_branch(std::move(then_branch))
-            , else_branch(std::move(then_branch))
-        {}
-
-        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            return fmt::format(
-                    "{0:>{w}}IfStatement:\n"
-                    "{0:>{w}}  .condition =\n{2}\n"
-                    "{0:>{w}}  .then_branch =\n{3}\n"
-                    "{0:>{w}}  .else_branch =\n{4}\n",
-                    "",  // dummy argument for padding
-                    fmt::arg("w", offset),
-                    condition ? condition->to_string(offset + 4) : "nullptr",
-                    then_branch ? then_branch->to_string(offset + 4) : "nullptr",
-                    else_branch ? else_branch->to_string(offset + 4) : "nullptr"
-            );
-        }
-
-        std::unique_ptr<Expression> condition;
-        std::unique_ptr<Statement> then_branch;
-        std::unique_ptr<Statement> else_branch;
     };
 
     struct Block : public StatementAcceptor<Block> {
@@ -251,6 +229,31 @@ namespace Statements {
         std::vector<std::unique_ptr<Statement>> statements;
     };
 
+    struct IfStatement : public StatementAcceptor<IfStatement> {
+        IfStatement(std::unique_ptr<Expression> condition, std::unique_ptr<Statement> then_branch, std::unique_ptr<Statement> else_branch)
+            : condition(std::move(condition))
+            , then_branch(std::move(then_branch))
+            , else_branch(std::move(else_branch))
+        {}
+
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
+            return fmt::format(
+                    "{0:>{w}}IfStatement:\n"
+                    "{0:>{w}}  .condition =\n{2}\n"
+                    "{0:>{w}}  .then_branch =\n{3}\n"
+                    "{0:>{w}}  .else_branch =\n{4}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    condition ? condition->to_string(offset + 4) : "nullptr",
+                    then_branch ? then_branch->to_string(offset + 4) : "nullptr",
+                    else_branch ? else_branch->to_string(offset + 4) : "nullptr"
+            );
+        }
+
+        std::unique_ptr<Expression> condition;
+        std::unique_ptr<Statement> then_branch;
+        std::unique_ptr<Statement> else_branch;
+    };
 } // namespace Statements
 
 
@@ -262,6 +265,7 @@ namespace Expressions {
     struct Variable;
     struct Unary;
     struct Logical;
+    struct FunctionCall;
 
     struct ExpressionVisitor {
         virtual void visit(Assignment& expression) = 0;
@@ -271,6 +275,7 @@ namespace Expressions {
         virtual void visit(Variable& expression) = 0;
         virtual void visit(Unary& expression) = 0;
         virtual void visit(Logical& expression) = 0;
+        virtual void visit(FunctionCall& expression) = 0;
     };
 
     template<typename T>
@@ -473,6 +478,37 @@ namespace Expressions {
         std::unique_ptr<Expression> rhs;
     };
 
+    struct FunctionCall : public ExpressionAcceptor<FunctionCall> {
+        FunctionCall(const Token& name, std::unique_ptr<Expression> callee, std::vector<std::unique_ptr<Expression>> params) 
+            : name(name)
+            , callee(std::move(callee))
+            , params(std::move(params))
+        {
+            //datatype = availableDataTypes["Bool"];
+        }
+
+        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
+            return fmt::format(
+                    "{0:>{w}}FunctionCall:\n"
+                    "{0:>{w}}  .callee = \n{2}\n"
+                    "{0:>{w}}  .params = {3}\n"
+                    "{0:>{w}}  .scope_distance = {4}\n"
+                    "{0:>{w}}  .name = {5}\n",
+                    "",  // dummy argument for padding
+                    fmt::arg("w", offset),
+                    callee->to_string(offset + 4),
+                    "",
+                    scope_distance,
+                    name
+            );
+        }
+
+        Token name;
+        std::unique_ptr<Expression> callee;
+        std::vector<std::unique_ptr<Expression>> params;
+        int scope_distance { -1 };
+    };
+
 } // namespace Expressions
 
 class Parser {
@@ -534,6 +570,7 @@ public:
     [[nodiscard]] auto term() -> Result<UniqExpression>;
     [[nodiscard]] auto factor() -> Result<UniqExpression>;
     [[nodiscard]] auto unary() -> Result<UniqExpression>;
+    [[nodiscard]] auto call() -> Result<UniqExpression>;
     [[nodiscard]] auto primary() -> Result<UniqExpression>;
 
 private:

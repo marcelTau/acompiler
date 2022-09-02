@@ -6,6 +6,9 @@
 using namespace Statements;
 using namespace Expressions;
 
+Resolver::Resolver() {
+    scopes.emplace_back();
+}
 // ====================================================================
 // Resolves
 // ====================================================================
@@ -56,6 +59,24 @@ void Resolver::resolve(Variable& value, const Token& name) {
         if (map.contains(name.lexeme)) {
             // if we want to resolve a local just set the scope_distance value
             value.scope_distance = depth;
+            spdlog::warn(fmt::format("Change scope distance from: {}", name));
+            return;
+        }
+        depth++;
+    }
+}
+
+void Resolver::resolve(FunctionCall& value, const Token& name) {
+    spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
+    std::size_t depth = 0;
+
+    // iterate over the scopes in reverse
+    for (const auto& map : scopes | std::views::reverse) {
+        // if the map contains the name of the variable, count the depth and add it to the locals
+        if (map.contains(name.lexeme)) {
+            // if we want to resolve a local just set the scope_distance value
+            value.scope_distance = depth;
+            spdlog::warn(fmt::format("Change scope distance from: {}", name));
             return;
         }
         depth++;
@@ -72,6 +93,7 @@ void Resolver::resolve(Assignment& value, const Token& name) {
         if (map.contains(name.lexeme)) {
             // if we want to resolve a local just set the scope_distance value
             value.scope_distance = depth;
+            spdlog::warn(fmt::format("Change scope distance from: {}", name));
             return;
         }
         depth++;
@@ -106,7 +128,9 @@ void Resolver::visit(Print& statement) {
 /// When a new function is introduced to the scope
 void Resolver::visit(Function& statement) {
     spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
+    spdlog::warn(fmt::format("declaring: {}", statement.name));
     declare(statement.name);
+    spdlog::warn(fmt::format("defining: {}", statement.name));
     define(statement.name);
     resolve(statement);
 }
@@ -192,6 +216,14 @@ void Resolver::visit(Logical& expression) {
     spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
     resolve(expression.lhs);
     resolve(expression.rhs);
+}
+
+void Resolver::visit(FunctionCall& expression) {
+    spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
+    resolve(expression, dynamic_cast<Expressions::Variable *>(expression.callee.get())->name);
+    for (auto& param : expression.params) {
+        resolve(param);
+    }
 }
 
 // ====================================================================

@@ -91,6 +91,9 @@ void Emitter::visit(Return& statement) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     statement.value->accept(*this);
     emit_line("  pop rax", "pop result of binary expression into rax");
+    emit_line("  mov rsp, rbp");
+    emit_line("  pop rbp");
+    emit_line("  ret");
 }
 
 void Emitter::visit(Function& statement) {
@@ -110,9 +113,10 @@ void Emitter::visit(Function& statement) {
         s->accept(*this);
     }
 
-    emit_line("  mov rsp, rbp", "restore rsp (cleanup stack)");
-    emit_line("  pop rbp", "get rbp back, since it is callee saved");
-    emit_line("  ret");
+    // @todo every function has to provide a return statement or it will crash :)
+    //emit_line("  mov rsp, rbp", "restore rsp (cleanup stack)");
+    //emit_line("  pop rbp", "get rbp back, since it is callee saved");
+    //emit_line("  ret");
 }
 
 // ------------------------------------------------------------------------
@@ -288,6 +292,13 @@ void Emitter::visit(Unary& /* expression */) {
 void Emitter::visit(Logical& /* expression */) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
     assert(false && "logical");
+}
+
+void Emitter::visit(FunctionCall& expression) {
+    spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+
+    emit_line(fmt::format("  call {}", expression.name.lexeme));
+    emit_line(fmt::format("  push rax"), "push return value of call on stack");
 }
 
 // ----------------------------------------------------------------------------

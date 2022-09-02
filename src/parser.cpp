@@ -195,6 +195,7 @@ auto Parser::ifStatement() -> Result<UniqStatement> {
     //std::ignore = consume(TokenType::Then, "Expect 'then' after if-condition.");
 
     //current_block_type = BlockType::IfStatement;
+    //auto then_branch = block();
     auto then_branch = statement();
     if (!then_branch) {
         return then_branch.get_err();
@@ -202,16 +203,24 @@ auto Parser::ifStatement() -> Result<UniqStatement> {
 
     std::unique_ptr<Statements::Statement> else_branch { nullptr };
 
+    //auto else_branch_result = statement();
+    //if (!else_branch_result) {
+        //return else_branch_result.get_err();
+    //}
+
+    //else_branch = else_branch_result.unwrap();
+
+
     if (checkAndAdvance(TokenType::Else)) {
         auto else_branch_result = statement();
         if (!else_branch_result) {
             return else_branch_result.get_err();
         }
-
         else_branch = else_branch_result.unwrap();
     }
 
-    auto ifStatement = std::make_unique<Statements::IfStatement>(condition.unwrap(), then_branch.unwrap(), std::move(else_branch));
+    //auto then_block = std::make_unique<Statements::Block>(std::move(then_branch));
+    auto ifStatement = std::make_unique<Statements::IfStatement>(condition.unwrap(), std::move(then_branch.unwrap()), std::move(else_branch));
     return Result<UniqStatement>(std::move(ifStatement));
 }
 
@@ -471,8 +480,71 @@ auto Parser::unary() -> Result<UniqExpression> {
         auto unaryExpr = std::make_unique<Expressions::Unary>(op, right.unwrap());
         return Result<UniqExpression>(std::move(unaryExpr));
     } else {
-        return primary(); // @todo change
+        return call();
     }
+}
+
+auto Parser::call() -> Result<UniqExpression> {
+    auto expr = primary();
+    if (!expr) {
+        return expr.get_err();
+    }
+    auto expr_unwrapped = expr.unwrap();
+
+    std::vector<UniqExpression> arguments;
+
+    auto name = previous();
+
+    // @todo errorhandling
+    if (checkAndAdvance(TokenType::LeftParen)) {
+        if (!check(TokenType::RightParen)) {
+            auto arg = expression();
+            if (!arg) {
+                return arg.get_err();
+            }
+            arguments.push_back(arg.unwrap());
+
+            while (checkAndAdvance(TokenType::Comma)) {
+                arg = expression();
+                if (!arg) {
+                    return arg.get_err();
+                }
+                arguments.push_back(arg.unwrap());
+            }
+        }
+
+        std::ignore = consume(TokenType::RightParen, "Expect ')' after arguments.");
+
+        auto function_call_expr = std::make_unique<Expressions::FunctionCall>(name, std::move(expr_unwrapped), std::move(arguments));
+        return Result<UniqExpression>(std::move(function_call_expr));
+    }
+
+    return expr_unwrapped;
+
+
+    /*
+    fn finish_call(&mut self, callee: &Rc<Expr>) -> Result<Expr, LoxResult> {
+        let mut arguments = Vec::new();
+
+        if !self.check(&RightParen) {
+            arguments.push(Rc::new(self.expression()?));
+            while match_token!(self, Comma) {
+                if arguments.len() >= 255 {
+                    self.error(&self.peek(), "You can't have more than 255 arguments.");
+                }
+                arguments.push(Rc::new(self.expression()?));
+            }
+        }
+
+        let paren = self.consume(&RightParen, "Expect ')' after arguments.")?;
+
+        Ok(Expr::Call(Rc::new(CallExpr {
+            callee: Rc::clone(callee),
+            paren,
+            arguments,
+        })))
+    }
+    */
 }
 
 auto Parser::primary() -> Result<UniqExpression> {
