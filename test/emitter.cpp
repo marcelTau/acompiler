@@ -1001,3 +1001,92 @@ end
     e.emit(stmts);
     EXPECT_EQ(run_file(filepath), "5");
 }
+
+TEST(emitter, function_call_simple) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun foo() -> Int
+    let x: Int = 10;
+    if 1 == 2 then
+        return 5;
+    end
+    return x;
+end
+
+fun main() -> Int
+    let x: Int = foo();
+    return x;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "10");
+}
+
+TEST(emitter, function_call_simple_short_circut_if_statement_with_return) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun foo() -> Int
+    let x: Int = 10;
+    if 1 == 1 then
+        return 5;
+    end
+    return x;
+end
+
+fun main() -> Int
+    let x: Int = foo();
+    return x;
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "5");
+}
+
+TEST(emitter, return_function_call_directly) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun foo() -> Int
+    let x: Int = 10;
+    if 1 == 1 then
+        return 5;
+    end
+    return x;
+end
+
+fun main() -> Int
+    return foo();
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "5");
+}
