@@ -91,25 +91,54 @@ auto Parser::declaration() -> Result<UniqStatement> {
     assert(false);
 }
 
+auto Parser::parseParam() -> Result<std::unique_ptr<Statements::VariableDefinition>> {
+    auto name = consume(TokenType::Identifier, "Expect parameter name.");
+    if (!name) {
+        return name.get_err();
+    }
+    std::ignore = consume(TokenType::Colon, "Expect ':' after parameter name.");
+    auto datatype_token = consume(TokenType::Identifier, "Expect datatype after ':'.");
+
+    if (!datatype_token) {
+        return datatype_token.get_err();
+    }
+
+    const auto datatype_name = datatype_token.unwrap().lexeme;
+
+    DataType datatype {};
+    try {
+        datatype = availableDataTypes.at(datatype_name);
+    } catch (std::out_of_range& e) {
+        return Result<std::unique_ptr<Statements::VariableDefinition>>::ParseError(datatype_token.unwrap(), 
+                                                 fmt::format("Expect datatype after ':' found {}.", datatype_name));
+    }
+
+    // @todo change this if its not a number
+    auto initializer = std::make_unique<Expressions::Number>("-1");
+    auto param = std::make_unique<Statements::VariableDefinition>(name.unwrap(), std::move(initializer), datatype);
+
+    return std::move(param);
+}
+
 auto Parser::function() -> Result<UniqStatement> {
     spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
-    auto name = consume(TokenType::Identifier, "Expect function name.");
+    auto function_name = consume(TokenType::Identifier, "Expect function name.");
     std::ignore = consume(TokenType::LeftParen, "Expect '(' after function name.");
 
-    std::vector<Token> params;
+    std::vector<std::unique_ptr<Statements::Statement>> params;
     if (!check(TokenType::RightParen)) {
-        auto param = consume(TokenType::Identifier, "Expect parameter name.");
-        if (!param) {
-            return param.get_err();
+        auto new_param = parseParam();
+        if (!new_param) {
+            return new_param.get_err();
         }
-        params.push_back(param.unwrap());
+        params.emplace_back(std::move(new_param.unwrap()));
 
         while (checkAndAdvance(TokenType::Comma)) {
-            param = consume(TokenType::Identifier, "Expect parameter name.");
-            if (!param) {
-                return param.get_err();
+            auto new_param = parseParam();
+            if (!new_param) {
+                return new_param.get_err();
             }
-            params.push_back(param.unwrap());
+            params.emplace_back(std::move(new_param.unwrap()));
         }
     }
 
@@ -141,7 +170,7 @@ auto Parser::function() -> Result<UniqStatement> {
         return block_stmts.get_err();
     }
 
-    auto function_stmt = std::make_unique<Statements::Function>(name.unwrap(), params, block_stmts.unwrap(), datatype);
+    auto function_stmt = std::make_unique<Statements::Function>(function_name.unwrap(), std::move(params), block_stmts.unwrap(), datatype);
     return Result<UniqStatement>(std::move(function_stmt));
 }
 
@@ -520,31 +549,6 @@ auto Parser::call() -> Result<UniqExpression> {
     }
 
     return expr_unwrapped;
-
-
-    /*
-    fn finish_call(&mut self, callee: &Rc<Expr>) -> Result<Expr, LoxResult> {
-        let mut arguments = Vec::new();
-
-        if !self.check(&RightParen) {
-            arguments.push(Rc::new(self.expression()?));
-            while match_token!(self, Comma) {
-                if arguments.len() >= 255 {
-                    self.error(&self.peek(), "You can't have more than 255 arguments.");
-                }
-                arguments.push(Rc::new(self.expression()?));
-            }
-        }
-
-        let paren = self.consume(&RightParen, "Expect ')' after arguments.")?;
-
-        Ok(Expr::Call(Rc::new(CallExpr {
-            callee: Rc::clone(callee),
-            paren,
-            arguments,
-        })))
-    }
-    */
 }
 
 auto Parser::primary() -> Result<UniqExpression> {

@@ -34,8 +34,9 @@ void Resolver::resolve(Function& function) {
     begin_scope();
 
     for (const auto& param : function.params) {
-        declare(param);
-        define(param);
+        // @todo fix this ... find a way to use `Statements::VariableDefinition` directly in the params
+        declare(dynamic_cast<Statements::VariableDefinition *>(param.get())->name);
+        define(dynamic_cast<Statements::VariableDefinition *>(param.get())->name);
     }
 
     resolve(function.body);

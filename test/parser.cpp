@@ -389,7 +389,7 @@ TEST(parser, empty_function) {
 
     auto name = Token({ .type = TokenType::Identifier, .lexeme = "foo", .position = { .line = 1, .column = 7 } });
     auto returnType = availableDataTypes.at("Int");
-    std::vector<Token> params {};
+    std::vector<std::unique_ptr<Statements::Statement>> params {};
     std::vector<std::unique_ptr<Statements::Statement>> body {};
     auto funcStmt = std::make_unique<Statements::Function>(name, std::move(params), std::move(body), returnType);
 
@@ -405,7 +405,7 @@ TEST(parser, non_empty_function) {
     auto stmts = p.parse(tokens);
 
     auto name = Token({ .type = TokenType::Identifier, .lexeme = "foo", .position = { .line = 1, .column = 7 } });
-    std::vector<Token> params {};
+    std::vector<std::unique_ptr<Statements::Statement>> params {};
     std::vector<std::unique_ptr<Statements::Statement>> body {};
 
     auto returnType = availableDataTypes.at("Int");
@@ -418,33 +418,6 @@ TEST(parser, non_empty_function) {
 
     expected.push_back(std::move(funcStmt));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
-}
-
-TEST(parser, non_empty_function_with_parameters) {
-    Scanner s;
-    Parser p;
-    Parser::StatementList expected;
-    auto tokens = s.scan("fun foo(param) -> Int\nlet a = 10;\nend");
-    auto stmts = p.parse(tokens);
-
-    auto returnType = availableDataTypes.at("Int");
-
-    auto name = Token({ .type = TokenType::Identifier, .lexeme = "foo", .position = { .line = 1, .column = 7 } });
-    std::vector<Token> params {};
-
-    auto param_name = Token({ .type = TokenType::Identifier, .lexeme = "param", .position = { .line = 1, .column = 13 } });
-    params.push_back(param_name);
-
-
-    std::vector<std::unique_ptr<Statements::Statement>> body {};
-    auto number = std::make_unique<Expressions::Number>("10");
-    Token name2 = { .type = TokenType::Identifier, .lexeme = "a", .position = { .line = 2, .column = 6 }, };
-    body.push_back(std::make_unique<Statements::VariableDefinition>(name2, std::move(number)));
-
-    auto funcStmt = std::make_unique<Statements::Function>(name, std::move(params), std::move(body), returnType);
-
-    expected.push_back(std::move(funcStmt));
-    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("\n===========================\n{}\n===========================\n{}\n===========================\n", stmts, expected);
 }
 
 TEST(parser, return_without_expression) {

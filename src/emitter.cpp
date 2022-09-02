@@ -109,6 +109,18 @@ void Emitter::visit(Function& statement) {
     // @todo add size of params here
     current_function_stack_offset = 0;
 
+    if (statement.params.size() == 1) {
+        emit_line(fmt::format("  mov [rsp - 0x8], rdi", "put first function argument in stack"));
+    }
+
+    // @todo put all params on the stack
+    //for (auto& param : statement.params) {
+        //// push value on stack
+        ////param->accept(*this);
+
+
+    //}
+
     for (const auto& s : statement.body) {
         s->accept(*this);
     }
@@ -296,6 +308,15 @@ void Emitter::visit(Logical& /* expression */) {
 
 void Emitter::visit(FunctionCall& expression) {
     spdlog::info(fmt::format("Emitter: {}", __PRETTY_FUNCTION__));
+
+    if (expression.params.size() == 1) {
+        auto *p = dynamic_cast<Expressions::Number *>(expression.params[0].get());
+        p->accept(*this);
+        //p->initializer->accept(*this);
+        auto reg = Register();
+        emit_line(fmt::format("  pop {:64}", reg), "Take argument value from stack");
+        emit_line(fmt::format("  mov rdi, {:64}", reg), "Store first argument in rdi");
+    }
 
     emit_line(fmt::format("  call {}", expression.name.lexeme));
     emit_line(fmt::format("  push rax"), "push return value of call on stack");

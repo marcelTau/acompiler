@@ -146,7 +146,7 @@ namespace Statements {
     };
 
     struct Function : public StatementAcceptor<Function> {
-        Function(Token name, std::vector<Token> params, std::vector<std::unique_ptr<Statement>> body, DataType return_datatype)
+        Function(Token name, std::vector<std::unique_ptr<Statement>> params, std::vector<std::unique_ptr<Statement>> body, DataType return_datatype)
             : name(name)
             , params(std::move(params))
             , body(std::move(body))
@@ -162,6 +162,12 @@ namespace Statements {
                 ss << statement->to_string(offset + 4);
             }
 
+            std::stringstream ss_params{};
+
+            for (auto& param : params) {
+                ss_params << param->to_string(offset + 4);
+            }
+
             return fmt::format(
                     "{0:>{w}}FunctionStatement:\n"
                     "{0:>{w}}  .returntype = {2}\n"
@@ -173,14 +179,14 @@ namespace Statements {
                     fmt::arg("w", offset),
                     return_datatype.to_string(),
                     name,
-                    fmt::join(params, ", "),
+                    ss_params.str(),
                     ss.str(),
                     scope_distance
             );
         }
 
         Token name;
-        std::vector<Token> params;
+        std::vector<std::unique_ptr<Statement>> params;
         std::vector<std::unique_ptr<Statement>> body;
         std::size_t stack_size { 0 };
         DataType return_datatype;
@@ -488,16 +494,22 @@ namespace Expressions {
         }
 
         [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
+
+            std::stringstream ss{};
+            for (const auto& param : params) {
+                ss << param->to_string(offset + 4);
+            }
+
             return fmt::format(
                     "{0:>{w}}FunctionCall:\n"
                     "{0:>{w}}  .callee = \n{2}\n"
-                    "{0:>{w}}  .params = {3}\n"
+                    "{0:>{w}}  .params = \n{3}\n"
                     "{0:>{w}}  .scope_distance = {4}\n"
                     "{0:>{w}}  .name = {5}\n",
                     "",  // dummy argument for padding
                     fmt::arg("w", offset),
                     callee->to_string(offset + 4),
-                    "",
+                    ss.str(),
                     scope_distance,
                     name
             );
@@ -537,6 +549,7 @@ public:
     [[nodiscard]] auto isAtEnd() -> bool;
     [[nodiscard]] auto peek() -> Token;
     [[nodiscard]] auto consume(const TokenType& ttype, std::string_view msg) -> Result<Token>;
+    [[nodiscard]] auto parseParam() -> Result<std::unique_ptr<Statements::VariableDefinition>>;
 
     template <typename ...Tokens>
     [[nodiscard]] auto checkAndAdvance(Tokens&& ...tokens) -> bool const;
