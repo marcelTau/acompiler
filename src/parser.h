@@ -30,7 +30,6 @@ namespace Expressions {
     };
 } // namespace Expression
 
-
 namespace Statements {
     using Expressions::Expression;
 
@@ -536,7 +535,7 @@ public:
     /// --- Helper functions --- ///
     [[nodiscard]] auto isAtEnd() -> bool;
     [[nodiscard]] auto peek() -> Token;
-    [[nodiscard]] auto consume(const TokenType& ttype, std::string_view msg) -> Result<Token>;
+    [[nodiscard]] auto consume(const TokenType& ttype, const std::string& msg) -> Result<Token>;
 
     template <typename ...Tokens>
     [[nodiscard]] auto checkAndAdvance(Tokens&& ...tokens) -> bool const;
@@ -545,8 +544,8 @@ public:
     auto advance() -> Token;
     [[nodiscard]] auto previous() -> Token;
 
-    [[nodiscard]] auto errorStmt(const Token& token, std::string_view msg) -> Result<UniqStatement>;
-    [[nodiscard]] auto errorExpr(const Token& token, std::string_view msg) -> Result<UniqExpression>;
+    [[nodiscard]] auto errorStmt(const Token& token, const std::string& msg) -> Result<UniqStatement>;
+    [[nodiscard]] auto errorExpr(const Token& token, const std::string& msg) -> Result<UniqExpression>;
 
     /// --- Parsing functions --- ///
     [[nodiscard]] auto declaration() -> Result<UniqStatement>;

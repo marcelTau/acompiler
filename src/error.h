@@ -28,9 +28,8 @@ struct Result {
     Result(struct Error error) : value(error) {}
     Result(T &&value) : value(std::move(value)) {}
 
-    static auto Error(ErrorType type, const Token& token, std::string_view msg) -> Result {
-        std::string smsg(msg);
-        struct Error e { .type = type, .token = token, .msg = smsg };
+    static auto Error(ErrorType type, const Token& token, const std::string& msg) -> Result {
+        struct Error e { .type = type, .token = token, .msg = msg };
         return Result(e);
     }
 
@@ -38,9 +37,8 @@ struct Result {
         return Result(error);
     }
 
-    static auto ParseError(const Token& token, std::string_view msg) -> Result {
-        std::string smsg(msg);
-        struct Error e { .type = ErrorType::ParserError, .token = token, .msg = smsg };
+    static auto ParseError(const Token& token, const std::string& msg) -> Result {
+        struct Error e { .type = ErrorType::ParserError, .token = token, .msg = msg };
         return Result(e);
     }
 

@@ -33,7 +33,7 @@ auto Parser::peek() -> Token {
     return m_tokens[m_current];
 }
 
-auto Parser::consume(const TokenType& ttype, std::string_view msg) -> Result<Token> {
+auto Parser::consume(const TokenType& ttype, const std::string& msg) -> Result<Token> {
     if (check(ttype)) {
         return Result<Token>(advance());
     } else {
@@ -68,12 +68,12 @@ auto Parser::previous() -> Token {
     return m_tokens[m_current - 1];
 }
 
-auto Parser::errorStmt(const Token& token, std::string_view msg) -> Result<UniqStatement> {
+auto Parser::errorStmt(const Token& token, const std::string& msg) -> Result<UniqStatement> {
     m_hasError = true;
     return Result<UniqStatement>::ParseError(token, msg);
 }
 
-auto Parser::errorExpr(const Token& token, std::string_view msg) -> Result<UniqExpression> {
+auto Parser::errorExpr(const Token& token, const std::string& msg) -> Result<UniqExpression> {
     m_hasError = true;
     return Result<UniqExpression>::ParseError(token, msg);
 }
