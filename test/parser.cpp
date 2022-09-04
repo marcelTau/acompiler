@@ -757,7 +757,10 @@ TEST(parser, simple_if_statement) {
     block_statements.push_back(std::move(then_branch));
     auto then_block = std::make_unique<Statements::Block>(std::move(block_statements));
 
-    auto ifStatement = std::make_unique<Statements::IfStatement>(std::move(condition), std::move(then_block), nullptr);
+    std::vector<std::unique_ptr<Statements::Statement>> else_block_statements;
+    auto else_block = std::make_unique<Statements::Block>(std::move(else_block_statements));
+
+    auto ifStatement = std::make_unique<Statements::IfStatement>(std::move(condition), std::move(then_block), std::move(else_block));
 
     expected.push_back(std::move(ifStatement));
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
@@ -797,36 +800,67 @@ TEST(parser, print_statement_with_expression) {
     EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
 }
 
+TEST(parser, if_without_else) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("if 1 == 1 then return 2; end");
+    auto stmts = p.parse(tokens);
 
-//TEST(parser, if_with_else) {
-    //Scanner s;
-    //Parser p;
-    //Parser::StatementList expected;
-    //auto tokens = s.scan("if 1 == 1 then return 2; else return 3; end");
-    //auto stmts = p.parse(tokens);
+    auto lhs = std::make_unique<Expressions::Number>("1");
+    auto op = Token{ .type = TokenType::EqualEqual, .lexeme = "==", .position = { .line = 1, .column = 6 }};
+    auto rhs = std::make_unique<Expressions::Number>("1");
 
-    //auto lhs = std::make_unique<Expressions::Number>("1");
-    //auto op = Token{ .type = TokenType::EqualEqual, .lexeme = "==", .position = { .line = 1, .column = 6 }};
-    //auto rhs = std::make_unique<Expressions::Number>("1");
+    auto condition = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), op, std::move(rhs));
 
-    //auto condition = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), op, std::move(rhs));
+    auto returnValue = std::make_unique<Expressions::Number>("2");
+    auto then_branch = std::make_unique<Statements::Return>(std::move(returnValue));
 
-    //auto returnValue = std::make_unique<Expressions::Number>("2");
-    //auto then_branch = std::make_unique<Statements::Return>(std::move(returnValue));
-
-    //std::vector<std::unique_ptr<Statements::Statement>> block_statements;
-    //block_statements.push_back(std::move(then_branch));
-    //auto then_block = std::make_unique<Statements::Block>(std::move(block_statements));
+    std::vector<std::unique_ptr<Statements::Statement>> block_statements;
+    block_statements.push_back(std::move(then_branch));
+    auto then_block = std::make_unique<Statements::Block>(std::move(block_statements));
 
     //auto returnValue2 = std::make_unique<Expressions::Number>("3");
     //auto else_branch = std::make_unique<Statements::Return>(std::move(returnValue2));
 
-    //std::vector<std::unique_ptr<Statements::Statement>> block_statements2;
-    //block_statements2.push_back(std::move(else_branch));
-    //auto else_block = std::make_unique<Statements::Block>(std::move(block_statements2));
+    std::vector<std::unique_ptr<Statements::Statement>> else_block_statements;
+    auto else_block = std::make_unique<Statements::Block>(std::move(else_block_statements));
 
-    //auto ifStatement = std::make_unique<Statements::IfStatement>(std::move(condition), std::move(then_block), std::move(else_block));
+    auto ifStatement = std::make_unique<Statements::IfStatement>(std::move(condition), std::move(then_block), std::move(else_block));
 
-    //expected.push_back(std::move(ifStatement));
-    //EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
-//}
+    expected.push_back(std::move(ifStatement));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}
+
+TEST(parser, if_with_else) {
+    Scanner s;
+    Parser p;
+    Parser::StatementList expected;
+    auto tokens = s.scan("if 1 == 1 then return 2; else return 3; end");
+    auto stmts = p.parse(tokens);
+
+    auto lhs = std::make_unique<Expressions::Number>("1");
+    auto op = Token{ .type = TokenType::EqualEqual, .lexeme = "==", .position = { .line = 1, .column = 6 }};
+    auto rhs = std::make_unique<Expressions::Number>("1");
+
+    auto condition = std::make_unique<Expressions::BinaryOperator>(std::move(lhs), op, std::move(rhs));
+
+    auto returnValue = std::make_unique<Expressions::Number>("2");
+    auto then_branch = std::make_unique<Statements::Return>(std::move(returnValue));
+
+    std::vector<std::unique_ptr<Statements::Statement>> block_statements;
+    block_statements.push_back(std::move(then_branch));
+    auto then_block = std::make_unique<Statements::Block>(std::move(block_statements));
+
+    auto returnValue2 = std::make_unique<Expressions::Number>("3");
+    auto else_branch = std::make_unique<Statements::Return>(std::move(returnValue2));
+
+    std::vector<std::unique_ptr<Statements::Statement>> block_statements2;
+    block_statements2.push_back(std::move(else_branch));
+    auto else_block = std::make_unique<Statements::Block>(std::move(block_statements2));
+
+    auto ifStatement = std::make_unique<Statements::IfStatement>(std::move(condition), std::move(then_block), std::move(else_block));
+
+    expected.push_back(std::move(ifStatement));
+    EXPECT_TRUE(is_same(stmts, expected)) << fmt::format("#{} {}#", stmts, expected);
+}

@@ -1090,3 +1090,53 @@ end
     e.emit(stmts);
     EXPECT_EQ(run_file(filepath), "5");
 }
+
+TEST(emitter, simple_if_else_with_only_return_then_branch) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    if 1 == 1 then
+        return 1;
+    else
+        return 2;
+    end
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "1");
+}
+
+TEST(emitter, simple_if_else_with_only_return_else_branch) {
+    std::string filepath(std::string("/tmp/") + test_info_->test_case_name());
+    auto filepathasm = filepath + ".asm";
+    Scanner s;
+    Parser p;
+    Resolver r;
+    Emitter e(filepathasm);
+
+    auto code = R"(
+fun main() -> Int
+    if 1 == 2 then
+        return 1;
+    else
+        return 2;
+    end
+end
+)";
+
+    auto tokens = s.scan(code);
+    auto stmts = p.parse(tokens);
+    r.resolve(stmts);
+    e.emit(stmts);
+    EXPECT_EQ(run_file(filepath), "2");
+}
