@@ -155,7 +155,9 @@ std::string Statements::Block::to_string(std::size_t offset) const {
 // ============================================================================
 // If statement
 // ============================================================================
-Statements::IfStatement::IfStatement(std::unique_ptr<Expressions::Expression> condition, std::unique_ptr<Statement> then_branch, std::unique_ptr<Statement> else_branch)
+Statements::IfStatement::IfStatement(std::unique_ptr<Expressions::Expression> condition,
+                                     std::unique_ptr<Block> then_branch, 
+                                     std::unique_ptr<Block> else_branch)
     : condition(std::move(condition))
     , then_branch(std::move(then_branch))
     , else_branch(std::move(else_branch))

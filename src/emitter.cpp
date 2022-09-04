@@ -28,7 +28,6 @@ void Emitter::Emitter::visit(IfStatement& statement) {
     auto false_label = getLabelName();
     emit_line(fmt::format("  jne {}", false_label), "jump to false label if not true");
 
-    // then branch
     statement.then_branch->accept(*this);
 
     auto continue_label = getLabelName();

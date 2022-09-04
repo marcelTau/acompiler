@@ -104,11 +104,11 @@ namespace Statements {
     };
 
     struct IfStatement : public StatementAcceptor<IfStatement> {
-        IfStatement(std::unique_ptr<Expressions::Expression> condition, std::unique_ptr<Statement> then_branch, std::unique_ptr<Statement> else_branch);
+        IfStatement(std::unique_ptr<Expressions::Expression> condition, std::unique_ptr<Block> then_branch, std::unique_ptr<Block> else_branch);
         [[nodiscard]] std::string to_string(std::size_t offset = 0) const final;
 
         std::unique_ptr<Expressions::Expression> condition;
-        std::unique_ptr<Statement> then_branch;
-        std::unique_ptr<Statement> else_branch;
+        std::unique_ptr<Block> then_branch;
+        std::unique_ptr<Block> else_branch;
     };
 }; // namespace Statements

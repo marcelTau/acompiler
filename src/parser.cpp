@@ -13,7 +13,7 @@ Parser::StatementList Parser::parse(const TokenList& tokens) {
         auto decl = declaration();
 
         if (!decl) {
-            spdlog::error(fmt::format("ParserError: {}", decl.get_err().msg));
+            spdlog::error(fmt::format("ParserError: {} {}", decl.get_err().msg, decl.get_err().token));
             return statements;
         }
 
@@ -155,7 +155,7 @@ auto Parser::block() -> Result<std::vector<UniqStatement>> {
 
     // @todo this needs to change when there are other constructs that use the
     // end keyword such as 'if' or 'for'
-    while (!check(TokenType::End) && !isAtEnd()) {
+    while (!check(TokenType::End) && !isAtEnd() && !check(TokenType::Else)) {
         auto stmt = declaration();
         if (!stmt) {
             return stmt.get_err();
@@ -180,11 +180,11 @@ auto Parser::statement() -> Result<UniqStatement> {
         return ifStatement();
     }
 
-    if (checkAndAdvance(TokenType::Then)) {
-        // @todo errorhandling else statement fails here
-        auto newBlock = std::make_unique<Statements::Block>(block().unwrap());
-        return Result<UniqStatement>(std::move(newBlock));
-    }
+    //if (checkAndAdvance(TokenType::Then)) {
+        //// @todo errorhandling else statement fails here
+        //auto newBlock = std::make_unique<Statements::Block>(block().unwrap());
+        //return Result<UniqStatement>(std::move(newBlock));
+    //}
 
     return expressionStatement();
 }
@@ -196,16 +196,17 @@ auto Parser::ifStatement() -> Result<UniqStatement> {
         return condition.get_err();
     }
 
-    //std::ignore = consume(TokenType::Then, "Expect 'then' after if-condition.");
+    std::ignore = consume(TokenType::Then, "Expect 'then' after if-condition.");
 
-    //current_block_type = BlockType::IfStatement;
-    //auto then_branch = block();
-    auto then_branch = statement();
+    spdlog::warn(fmt::format("Parser: get then branch: {}", peek()));
+    auto then_branch = block();
+    spdlog::warn(fmt::format("Parser: got then branch: {}", peek()));
+    //auto then_branch = statement();
     if (!then_branch) {
         return then_branch.get_err();
     }
 
-    std::unique_ptr<Statements::Statement> else_branch { nullptr };
+    std::vector<std::unique_ptr<Statements::Statement>> else_branch { };
 
     //auto else_branch_result = statement();
     //if (!else_branch_result) {
@@ -216,15 +217,18 @@ auto Parser::ifStatement() -> Result<UniqStatement> {
 
 
     if (checkAndAdvance(TokenType::Else)) {
-        auto else_branch_result = statement();
+        spdlog::warn(fmt::format("Parser: get else branch"));
+        auto else_branch_result = block();
+        spdlog::warn(fmt::format("Parser: got else branch: {}", previous()));
         if (!else_branch_result) {
             return else_branch_result.get_err();
         }
         else_branch = else_branch_result.unwrap();
     }
 
-    //auto then_block = std::make_unique<Statements::Block>(std::move(then_branch));
-    auto ifStatement = std::make_unique<Statements::IfStatement>(condition.unwrap(), std::move(then_branch.unwrap()), std::move(else_branch));
+    auto then_block = std::make_unique<Statements::Block>(std::move(then_branch.unwrap()));
+    auto else_block = std::make_unique<Statements::Block>(std::move(else_branch));
+    auto ifStatement = std::make_unique<Statements::IfStatement>(condition.unwrap(), std::move(then_block), std::move(else_block));
     return Result<UniqStatement>(std::move(ifStatement));
 }
 

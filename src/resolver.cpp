@@ -9,10 +9,10 @@ using namespace Expressions;
 Resolver::Resolver() {
     scopes.emplace_back();
 }
+
 // ====================================================================
 // Resolves
 // ====================================================================
-
 void Resolver::resolve(const StatementList& statements) {
     spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
 
@@ -154,9 +154,9 @@ void Resolver::visit(IfStatement& statement) {
     spdlog::info(fmt::format("Resolver: {}", __PRETTY_FUNCTION__));
     // @todo maybe todo something here
     resolve(statement.condition);
-    resolve(statement.then_branch);
+    resolve(statement.then_branch->statements);
     if (statement.else_branch) {
-        resolve(statement.else_branch);
+        resolve(statement.else_branch->statements);
     }
 }
 
