@@ -18,6 +18,9 @@ set(SOURCES
 
     src/register.h
 
+    src/expressions.cpp
+    src/expressions.h
+
     src/emitter.cpp
     src/emitter.h
 

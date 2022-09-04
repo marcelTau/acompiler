@@ -4,20 +4,20 @@
 #include <vector>
 #include <memory>
 #include <optional>
-#include <charconv>
-#include <cassert>
 #include <sstream>
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 #include "token.h"
 #include "error.h"
 #include "datatype.h"
+#include "expressions.h"
 
 template <typename Value>
 struct Environment;
 
 
 /// @todo ugly hacky stuff, try to fix this pls
+/*
 namespace Expressions {
     struct ExpressionVisitor;
     struct Expression {
@@ -29,6 +29,7 @@ namespace Expressions {
         DataType datatype {};
     };
 } // namespace Expression
+*/
 
 namespace Statements {
     using Expressions::Expression;
@@ -254,261 +255,6 @@ namespace Statements {
         std::unique_ptr<Statement> else_branch;
     };
 } // namespace Statements
-
-
-namespace Expressions {
-    struct Assignment;
-    struct BinaryOperator;
-    struct Number;
-    struct Bool;
-    struct Variable;
-    struct Unary;
-    struct Logical;
-    struct FunctionCall;
-
-    struct ExpressionVisitor {
-        virtual void visit(Assignment& expression) = 0;
-        virtual void visit(BinaryOperator& expression) = 0;
-        virtual void visit(Number& expression) = 0;
-        virtual void visit(Bool& expression) = 0;
-        virtual void visit(Variable& expression) = 0;
-        virtual void visit(Unary& expression) = 0;
-        virtual void visit(Logical& expression) = 0;
-        virtual void visit(FunctionCall& expression) = 0;
-    };
-
-    template<typename T>
-    struct ExpressionAcceptor : public Expression {
-        void accept(ExpressionVisitor& visitor) final {
-            visitor.visit(static_cast<T&>(*this));
-        }
-    };
-
-    struct Assignment : public ExpressionAcceptor<Assignment> {
-        Assignment(Token name, std::unique_ptr<Expression> value)
-            : name(name)
-            , value(std::move(value))
-        {
-        }
-
-        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            return fmt::format(
-                    "{0:>{w}}Assignment:\n"
-                    "{0:>{w}}  .name = {2}\n"
-                    "{0:>{w}}  .value =\n{3}\n"
-                    "{0:>{w}}  .scope_distance = {4}\n",
-                    "",  // dummy argument for padding
-                    fmt::arg("w", offset),
-                    name,
-                    value ? value->to_string(offset + 4) : "nullptr",
-                    scope_distance
-            );
-        }
-
-        Token name;
-        std::unique_ptr<Expression> value;
-        int scope_distance { -1 };
-    };
-
-    struct BinaryOperator : public ExpressionAcceptor<BinaryOperator> {
-        BinaryOperator(std::unique_ptr<Expression> lhs, Token operator_type, std::unique_ptr<Expression> rhs) 
-            : lhs{std::move(lhs)}
-            , operator_type(operator_type)
-            , rhs{std::move(rhs)}
-        {
-            // @todo the datatype should be set in the typechecker and not in the parser,
-            // since the parser does not know how to resolve local variables to
-            // their actual datatype
-        }
-
-        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            return fmt::format(
-                    "{0:>{w}}BinaryOperator:\n"
-                    "{0:>{w}}  .datatype = {2}\n"
-                    "{0:>{w}}  .lhs =\n{3}\n"
-                    "{0:>{w}}  .operator = {4}\n"
-                    "{0:>{w}}  .rhs =\n{5}\n",
-                    "",  // dummy argument for padding
-                    fmt::arg("w", offset),
-                    datatype.to_string(),
-                    lhs->to_string(offset + 4), 
-                    operator_type, 
-                    rhs->to_string(offset + 4)
-            );
-        }
-
-        std::unique_ptr<Expression> lhs;
-        Token operator_type;
-        std::unique_ptr<Expression> rhs;
-    };
-
-    struct Number : public ExpressionAcceptor<Number> {
-        Number(std::string_view sv)
-        {
-            auto result = std::from_chars(sv.data(), sv.data() + sv.size(), value);
-            if (result.ec == std::errc::invalid_argument) {
-                assert(false && "TODO NUMBER");
-            }
-            this->datatype = availableDataTypes.at("Int");
-        }
-
-        Number(Number&& other) noexcept {
-            this->datatype = other.datatype;
-        }
-
-        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            //return fmt::format("NumberExpression({}): .value {{ {} }}", datatype.to_string(), value);
-            return fmt::format(
-                    "{0:>{w}}NumberExpression:\n"
-                    "{0:>{w}}  .datatype = {2}\n"
-                    "{0:>{w}}  .value = {3}",
-                    "",  // dummy argument for padding
-                    fmt::arg("w", offset),
-                    datatype.to_string(),
-                    value
-            );
-        }
-
-        int value;
-    };
-
-    struct Bool : public ExpressionAcceptor<Bool> {
-        Bool(std::string_view sv)
-        {
-            value = (sv == "true");
-            datatype = availableDataTypes.at("Bool");
-        }
-
-        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            //return fmt::format("BoolExpression({}): .value {{ {} }}", datatype.to_string(), value ? "true" : "false");
-            return fmt::format(
-                    "{0:>{w}}BoolExpression:\n"
-                    "{0:>{w}}  .datatype = {2}\n"
-                    "{0:>{w}}  .value = {3}\n",
-                    "",  // dummy argument for padding
-                    fmt::arg("w", offset),
-                    datatype.to_string(),
-                    value ? "true" : "false"
-            );
-        }
-
-        bool value;
-    };
-
-    struct Variable : public ExpressionAcceptor<Variable> {
-        Variable(const Token& name)
-            : name(name)
-        {
-            // @todo add datatype of variable here.
-            // This will probably change when scopes are implemented and we can lookup the variable and get it's type
-        }
-
-        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            //return fmt::format("VariableExpression({}): .name {{ {} }}", datatype.to_string(), name);
-            return fmt::format(
-                    "{0:>{w}}Variable:\n"
-                    "{0:>{w}}  .name = {2}\n"
-                    "{0:>{w}}  .datatype = {3}\n"
-                    "{0:>{w}}  .scope_distance = {4}\n",
-                    "",  // dummy argument for padding
-                    fmt::arg("w", offset),
-                    name,
-                    datatype.to_string(),
-                    scope_distance
-            );
-        }
-        Token name;
-        int scope_distance { -1 };
-    };
-
-    struct Unary : public ExpressionAcceptor<Unary> {
-        Unary(Token operator_type, std::unique_ptr<Expression> rhs) 
-            : operator_type(operator_type)
-            , rhs(std::move(rhs))
-        {
-            datatype = this->rhs->datatype;
-        }
-
-        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            return fmt::format(
-                    "{0:>{w}}UnaryExpression:\n"
-                    "{0:>{w}}  .operator = {2}\n"
-                    "{0:>{w}}  .rhs = \n{3}\n"
-                    "{0:>{w}}  .datatype = {4}\n",
-                    "",  // dummy argument for padding
-                    fmt::arg("w", offset),
-                    operator_type,
-                    rhs->to_string(offset + 4),
-                    datatype.to_string()
-            );
-        }
-
-        Token operator_type;
-        std::unique_ptr<Expression> rhs;
-    };
-
-    struct Logical : public ExpressionAcceptor<Logical> {
-        Logical(std::unique_ptr<Expression> lhs, Token operator_type, std::unique_ptr<Expression> rhs) 
-            : lhs(std::move(lhs))
-            , operator_type(operator_type)
-            , rhs(std::move(rhs))
-        {
-            datatype = availableDataTypes["Bool"];
-        }
-
-        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            return fmt::format(
-                    "{0:>{w}}LogicalExpression:\n"
-                    "{0:>{w}}  .lhs = \n{2}\n"
-                    "{0:>{w}}  .operator = {3}\n"
-                    "{0:>{w}}  .rhs = \n{4}\n"
-                    "{0:>{w}}  .datatype = {5}\n",
-                    "",  // dummy argument for padding
-                    fmt::arg("w", offset),
-                    lhs->to_string(offset + 4),
-                    operator_type,
-                    rhs->to_string(offset + 4),
-                    datatype.to_string()
-            );
-        }
-
-        std::unique_ptr<Expression> lhs;
-        Token operator_type;
-        std::unique_ptr<Expression> rhs;
-    };
-
-    struct FunctionCall : public ExpressionAcceptor<FunctionCall> {
-        FunctionCall(const Token& name, std::unique_ptr<Expression> callee, std::vector<std::unique_ptr<Expression>> params) 
-            : name(name)
-            , callee(std::move(callee))
-            , params(std::move(params))
-        {
-            //datatype = availableDataTypes["Bool"];
-        }
-
-        [[nodiscard]] std::string to_string(std::size_t offset = 0) const final {
-            return fmt::format(
-                    "{0:>{w}}FunctionCall:\n"
-                    "{0:>{w}}  .callee = \n{2}\n"
-                    "{0:>{w}}  .params = {3}\n"
-                    "{0:>{w}}  .scope_distance = {4}\n"
-                    "{0:>{w}}  .name = {5}\n",
-                    "",  // dummy argument for padding
-                    fmt::arg("w", offset),
-                    callee->to_string(offset + 4),
-                    "",
-                    scope_distance,
-                    name
-            );
-        }
-
-        Token name;
-        std::unique_ptr<Expression> callee;
-        std::vector<std::unique_ptr<Expression>> params;
-        int scope_distance { -1 };
-    };
-
-} // namespace Expressions
 
 class Parser {
 public:
