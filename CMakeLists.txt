@@ -21,6 +21,9 @@ set(SOURCES
     src/expressions.cpp
     src/expressions.h
 
+    src/statements.cpp
+    src/statements.h
+
     src/emitter.cpp
     src/emitter.h
 

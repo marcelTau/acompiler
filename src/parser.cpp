@@ -24,7 +24,9 @@ Parser::StatementList Parser::parse(const TokenList& tokens) {
     return statements;
 }
 
-/// --- Helper functions --- ///
+// ============================================================================
+// Helper Functions
+// ============================================================================
 auto Parser::isAtEnd() -> bool {
     return peek().type == TokenType::Eof;
 }
@@ -78,7 +80,9 @@ auto Parser::errorExpr(const Token& token, const std::string& msg) -> Result<Uni
     return Result<UniqExpression>::ParseError(token, msg);
 }
 
-/// --- Parsing functions --- ///
+// ============================================================================
+// Statements
+// ============================================================================
 auto Parser::declaration() -> Result<UniqStatement> {
     spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     if (checkAndAdvance(TokenType::Let)) {
@@ -311,6 +315,9 @@ auto Parser::varDeclaration() -> Result<UniqStatement> {
     return Result<UniqStatement>(std::move(varDefinition));
 }
 
+// ============================================================================
+// Expressions
+// ============================================================================
 auto Parser::expression() -> Result<UniqExpression> {
     spdlog::info(fmt::format("Parser: {}", __PRETTY_FUNCTION__));
     return assignment();

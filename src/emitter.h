@@ -3,6 +3,7 @@
 #include "environment.h"
 #include "parser.h"
 #include <fstream>
+#include <sstream>
 #include <bitset>
 
 struct Emitter : public Expressions::ExpressionVisitor, Statements::StatementVisitor {
