@@ -1,0 +1,4 @@
+def main() -> Int
+    let x: Int = 2;
+    return x;
+end
